@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-4">
+  <h2>Profile: {{ profile.user.username }}</h2>
+  <p>{{ profile.bio }}</p>
+  {% if profile.avatar %}<img src="{{ profile.avatar.url }}" alt="avatar" style="max-width:150px;">{% endif %}
+  <p><a href="{% url 'profiles:edit' %}">Edit profile</a></p>
+</div>
+{% endblock %}
