@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>News Feed</h2>
+
+<form method="post">
+  {% csrf_token %}
+  <textarea name="text" class="form-control mb-2" rows="3" placeholder="What's on your mind?"></textarea>
+  <button class="btn btn-primary">Post</button>
+</form>
+
+<hr>
+{% for post in posts %}
+  <div class="card bg-secondary text-light mb-3">
+    <div class="card-body">
+      <h6>@{{ post.author.username }}</h6>
+      <p>{{ post.text }}</p>
+      <small>{{ post.created_at }}</small>
+    </div>
+  </div>
+{% empty %}
+  <p>No posts yet.</p>
+{% endfor %}
+{% endblock %}

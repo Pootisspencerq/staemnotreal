@@ -40,7 +40,7 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],
+        'DIRS': [BASE_DIR / "templates"],   # 👈 only here, not duplicated
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -71,7 +71,7 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-AUTH_USER_MODEL = 'accounts.User'
+
 
 
 MEDIA_URL = '/media/'
