@@ -4,8 +4,8 @@ from django.contrib.auth.models import User
 from django.shortcuts import render, redirect
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
-
-
+from .forms import ProfileForm
+from .models import Profile
 @login_required
 def profile_view(request, username=None):
     if username:
@@ -13,6 +13,21 @@ def profile_view(request, username=None):
     else:
         user = request.user
     return render(request, "accounts/profile.html", {"profile_user": user})
+
+@login_required
+def edit_profile_view(request):
+    # This ensures a Profile exists
+    profile, created = Profile.objects.get_or_create(user=request.user)
+    
+    if request.method == "POST":
+        form = ProfileForm(request.POST, request.FILES, instance=profile)
+        if form.is_valid():
+            form.save()
+            return redirect("accounts:my_profile")
+    else:
+        form = ProfileForm(instance=profile)
+    
+    return render(request, "accounts/edit_profile.html", {"form": form})
 
 
 def register_view(request):

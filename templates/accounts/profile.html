@@ -1,10 +1,22 @@
 {% extends "base.html" %}
+
 {% block content %}
-<h2>{{ profile_user.username }}'s Profile</h2>
+<div class="container mt-5">
+    <h2>{{ profile_user.username }}'s Profile</h2>
+    {% if profile_user.profile.avatar %}
+        <img src="{{ profile_user.profile.avatar.url }}" alt="Avatar" class="img-thumbnail" width="150">
+    {% endif %}
+    <p><strong>Bio:</strong> {{ profile_user.profile.bio }}</p>
+    {% if profile_user.profile.favorite_color %}
+        <p><strong>Favorite color:</strong> 
+            <span style="color: {{ profile_user.profile.favorite_color }}">
+                {{ profile_user.profile.favorite_color }}
+            </span>
+        </p>
+    {% endif %}
 
-{% if profile_user.profile.avatar %}
-  <img src="{{ profile_user.profile.avatar.url }}" width="100" class="rounded-circle mb-3">
-{% endif %}
-
-<p>{{ profile_user.profile.bio }}</p>
+    {% if profile_user == user %}
+        <a href="{% url 'accounts:edit_profile' %}" class="btn btn-secondary mt-3">Edit Profile</a>
+    {% endif %}
+</div>
 {% endblock %}

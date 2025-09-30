@@ -1,4 +1,6 @@
 <!DOCTYPE html>
+{% load static %}
+
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -22,15 +24,34 @@
           <li class="nav-item">
             <a class="nav-link" href="{% url 'posts:feed' %}">Feed</a>
           </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'accounts:my_profile' %}">Profile</a>
+
+          <!-- Avatar dropdown -->
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="navbarDropdown" role="button"
+               data-bs-toggle="dropdown" aria-expanded="false">
+              {% if user_profile.avatar %}
+                <img src="{{ user_profile.avatar.url }}" alt="Avatar"
+                     style="width:32px; height:32px; border-radius:50%; object-fit:cover; margin-right:8px;">
+              {% else %}
+                <img src="{% static 'default-avatar.png' %}" alt="Avatar"
+                     style="width:32px; height:32px; border-radius:50%; object-fit:cover; margin-right:8px;">
+              {% endif %}
+              {{ user.username }}
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+              <li><a class="dropdown-item" href="{% url 'accounts:my_profile' %}">Profile</a></li>
+              <li><a class="dropdown-item" href="{% url 'accounts:edit_profile' %}">Edit Profile</a></li>
+
+              <li><hr class="dropdown-divider"></li>
+              <li>
+                <form method="post" action="{% url 'accounts:logout' %}" class="px-3 py-1">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-link p-0">Logout</button>
+                </form>
+              </li>
+            </ul>
           </li>
-          <li class="nav-item">
-            <form method="post" action="{% url 'accounts:logout' %}" class="d-inline">
-              {% csrf_token %}
-              <button type="submit" class="btn btn-link nav-link p-0">Logout</button>
-            </form>
-          </li>
+
         {% else %}
           <li class="nav-item">
             <a class="nav-link" href="{% url 'accounts:login' %}">Login</a>
@@ -43,6 +64,7 @@
     </div>
   </div>
 </nav>
+
 
 <div class="container mt-4">
   {% block content %}{% endblock %}

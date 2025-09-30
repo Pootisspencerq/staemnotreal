@@ -1,8 +1,14 @@
 from django.db import models
 from django.conf import settings
+from django.contrib.auth.models import User
 
 class Profile(models.Model):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name="profiles_profile"
+    )
+    
+    
+
     bio = models.TextField(blank=True)
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
     cover = models.ImageField(upload_to='covers/', blank=True, null=True)
