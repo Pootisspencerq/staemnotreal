@@ -4,6 +4,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.conf import settings
 
+
 class Profile(models.Model):
     user = models.OneToOneField(
         User, on_delete=models.CASCADE, related_name="accounts_profile"
@@ -12,15 +13,38 @@ class Profile(models.Model):
     bio = models.TextField(max_length=500, blank=True)
     favorite_color = models.CharField(max_length=7, blank=True)
 
-
     def __str__(self):
         return f"{self.user.username}'s profile"
+
+
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def create_or_update_user_profile(sender, instance, created, **kwargs):
+    """
+    Створює профіль при реєстрації користувача
+    або оновлює при зміні.
+    """
     if created:
         Profile.objects.create(user=instance)
+    else:
+        Profile.objects.get_or_create(user=instance)
+        instance.accounts_profile.save()
 
-@receiver(post_save, sender=User)
-def create_profile(sender, instance, created, **kwargs):
-    if created:
-        Profile.objects.create(user=instance)
+class Post(models.Model):
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="posts")
+    text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Post by {self.author.username}"
+
+class Follow(models.Model):
+    follower = models.ForeignKey(User, related_name="following", on_delete=models.CASCADE)
+    following = models.ForeignKey(User, related_name="followers", on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("follower", "following")
+
+    def __str__(self):
+        return f"{self.follower.username} → {self.following.username}"
+
