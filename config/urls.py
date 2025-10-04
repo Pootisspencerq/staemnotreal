@@ -16,6 +16,6 @@ urlpatterns = [
     # Optional: other apps
     path("chat/", include("chat.urls")),
     path("groups/", include("groups.urls")),
-    path("profiles/", include("profiles.urls")),
+    
     path("notifications/", include("notifications.urls")),
  ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

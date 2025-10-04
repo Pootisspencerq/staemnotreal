@@ -29,13 +29,7 @@ def create_or_update_user_profile(sender, instance, created, **kwargs):
         Profile.objects.get_or_create(user=instance)
         instance.accounts_profile.save()
 
-class Post(models.Model):
-    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="posts")
-    text = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        return f"Post by {self.author.username}"
 
 class Follow(models.Model):
     follower = models.ForeignKey(User, related_name="following", on_delete=models.CASCADE)

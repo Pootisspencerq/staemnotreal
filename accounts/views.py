@@ -6,7 +6,7 @@ from django.contrib.auth import login
 
 from .forms import ProfileForm
 from .models import Profile, Follow
-
+from django.contrib.auth import get_user_model
 
 @login_required
 def profile_view(request, username=None):
@@ -30,6 +30,22 @@ def profile_view(request, username=None):
             "is_following": is_following,
         },
     )
+User = get_user_model()
+
+@login_required
+def profile_detail(request, username):
+    user = get_object_or_404(User, username=username)
+    profile, _ = Profile.objects.get_or_create(user=user)
+    return render(request, 'profiles/detail.html', {'profile': profile})
+
+@login_required
+def edit_profile(request):
+    profile, _ = Profile.objects.get_or_create(user=request.user)
+    if request.method == 'POST':
+        profile.bio = request.POST.get('bio', profile.bio)
+        profile.save()
+        return redirect('profiles:detail', username=request.user.username)
+    return render(request, 'profiles/edit.html', {'profile': profile})
 
 
 @login_required
