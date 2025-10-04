@@ -2,6 +2,7 @@
 {% block content %}
 <h2>News Feed</h2>
 
+<!-- Створення поста -->
 <form method="post">
   {% csrf_token %}
   <textarea name="text" class="form-control mb-2" rows="3" placeholder="What's on your mind?"></textarea>
@@ -9,12 +10,45 @@
 </form>
 
 <hr>
+
+<!-- Список постів -->
 {% for post in posts %}
   <div class="card bg-secondary text-light mb-3">
     <div class="card-body">
       <h6>@{{ post.author.username }}</h6>
       <p>{{ post.text }}</p>
-      <small>{{ post.created_at }}</small>
+      <small>{{ post.created_at|date:"H:i d/m/Y" }}</small>
+
+      <hr>
+
+      <!-- Лайки -->
+      <div>
+        <a href="{% url 'posts:toggle_like' post.id %}" class="btn btn-sm 
+          {% if request.user in post.likes.all %}btn-danger{% else %}btn-success{% endif %}">
+          {% if request.user in post.likes.all %}Unlike{% else %}Like{% endif %}
+        </a>
+        <span>{{ post.likes.count }} ❤️</span>
+      </div>
+
+      <!-- Коментарі -->
+      <div class="mt-2">
+        <strong>Comments ({{ post.comments.count }})</strong>
+        <ul class="list-unstyled">
+          {% for comment in post.comments.all %}
+            <li>
+              <small><b>@{{ comment.author.username }}</b> {{ comment.text }} ({{ comment.created_at|date:"H:i" }})</small>
+            </li>
+          {% empty %}
+            <li><small>No comments yet.</small></li>
+          {% endfor %}
+        </ul>
+
+        <!-- Форма додавання коментаря -->
+        <form method="post" action="{% url 'posts:add_comment' post.id %}">
+          {% csrf_token %}
+          <input type="text" name="text" class="form-control form-control-sm" placeholder="Write a comment...">
+        </form>
+      </div>
     </div>
   </div>
 {% empty %}
