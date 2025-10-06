@@ -1,9 +1,25 @@
 {% extends "base.html" %}
+
 {% block content %}
-<h3>Редагувати пост</h3>
-<form method="post">
-  {% csrf_token %}
-  <textarea name="text" class="form-control mb-2" rows="3">{{ post.text }}</textarea>
-  <button class="btn btn-primary">Зберегти</button>
-</form>
+<div class="card shadow-sm border-0 rounded-3">
+  <div class="card-body">
+    <h3 class="card-title mb-3">
+      <i class="bi bi-pencil-square"></i> Редагувати пост
+    </h3>
+
+    <form method="post" action="">
+      {% csrf_token %}
+      <textarea name="text" class="form-control mb-3" rows="4">{{ post.text }}</textarea>
+
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-save"></i> Зберегти
+        </button>
+        <a href="{% url 'posts:feed' %}" class="btn btn-secondary">
+          <i class="bi bi-x-circle"></i> Скасувати
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
 {% endblock %}

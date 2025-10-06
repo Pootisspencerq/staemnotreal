@@ -1,10 +1,26 @@
 {% extends "base.html" %}
+
 {% block content %}
-<h3>Видалити пост?</h3>
-<p>{{ post.text }}</p>
-<form method="post">
-  {% csrf_token %}
-  <button class="btn btn-danger">Так, видалити</button>
-  <a href="{% url 'posts:feed' %}" class="btn btn-secondary">Скасувати</a>
-</form>
+<div class="card shadow-sm border-0 rounded-3">
+  <div class="card-body">
+    <h3 class="card-title text-danger mb-3">
+      <i class="bi bi-trash"></i> Видалити пост?
+    </h3>
+
+    <p class="mb-2"><strong>Текст:</strong></p>
+    <div class="border rounded p-3 mb-4 bg-light">
+      {{ post.text }}
+    </div>
+
+    <form method="post" class="d-flex gap-2">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger">
+        <i class="bi bi-check-lg"></i> Так, видалити
+      </button>
+      <a href="{% url 'posts:feed' %}" class="btn btn-secondary">
+        <i class="bi bi-x-circle"></i> Скасувати
+      </a>
+    </form>
+  </div>
+</div>
 {% endblock %}

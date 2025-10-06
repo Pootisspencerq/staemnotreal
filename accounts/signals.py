@@ -4,10 +4,13 @@ from django.contrib.auth.models import User
 from .models import Profile
 
 @receiver(post_save, sender=User)
-def create_profile(sender, instance, created, **kwargs):
-    if created:
-        Profile.objects.create(user=instance)
+def create_or_update_profile(sender, instance, created, **kwargs):
+    """
+    Створює профіль при реєстрації користувача
+    або оновлює існуючий профіль.
+    """
+    # Створення нового профілю, якщо його немає
+    profile, _ = Profile.objects.get_or_create(user=instance)
 
-@receiver(post_save, sender=User)
-def save_profile(sender, instance, **kwargs):
-    instance.profile.save()
+    # Оновлення профілю
+    profile.save()

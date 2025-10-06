@@ -5,59 +5,71 @@ from django.http import JsonResponse
 from .models import Post, Like, Comment
 from accounts.models import Follow
 from django.contrib import messages
+from django.views.decorators.http import require_POST
 User = get_user_model()
 
 
 @login_required
 def feed_view(request):
-    following_ids = Follow.objects.filter(follower=request.user).values_list("following_id", flat=True)
+    if request.method == "POST":
+        text = request.POST.get("text")
+        img = request.FILES.get("img")  # 🟢 беремо файл
+        if text or img:  # дозволяємо пости тільки з текстом, тільки з картинкою або обидва
+            Post.objects.create(author=request.user, text=text, img=img)
+        return redirect("posts:feed")
 
-    posts = (
-        Post.objects.select_related("author")
-        .prefetch_related("comments", "likes")
-        .filter(author__in=list(following_ids) + [request.user.id])
-        .order_by("-created_at")
-    )
-
-    # Add liked_by_user attribute for template
+    posts = Post.objects.all().select_related("author").prefetch_related("comments", "likes")
     for post in posts:
-        post.liked_by_user = post.likes.filter(user=request.user).exists()
-
+        post.liked_by_user = (
+            request.user.is_authenticated
+            and post.likes.filter(user=request.user).exists()
+        )
     return render(request, "posts/feed.html", {"posts": posts})
-
 
 
 @login_required
 def create_post(request):
     if request.method == "POST":
         text = request.POST.get("text")
-        if text:
-            Post.objects.create(author=request.user, text=text)
+        img = request.FILES.get("img")  # 🟢 беремо файл
+        if text or img:
+            Post.objects.create(author=request.user, text=text, img=img)
         return redirect("posts:feed")
     return redirect("posts:feed")
 
 
 @login_required
+@require_POST
 def toggle_like(request, post_id):
     post = get_object_or_404(Post, id=post_id)
     like = Like.objects.filter(user=request.user, post=post).first()
 
     if like:
-        like.delete()   # якщо вже лайкнув → забрати
+        like.delete()
+        liked = False
     else:
-        Like.objects.create(user=request.user, post=post)  # якщо ще ні → додати
+        Like.objects.create(user=request.user, post=post)
+        liked = True
 
-    return redirect("posts:feed")
+    return JsonResponse({
+        "liked": liked,
+        "like_count": post.likes.count(),
+    })
 
 
 @login_required
+@require_POST
 def add_comment(request, post_id):
     post = get_object_or_404(Post, id=post_id)
-    if request.method == "POST":
-        text = request.POST.get("text")
-        if text:
-            Comment.objects.create(post=post, author=request.user, text=text)
-    return redirect("posts:feed")
+    text = request.POST.get("text")
+    if text:
+        comment = Comment.objects.create(post=post, author=request.user, text=text)
+        return JsonResponse({
+            "author": comment.author.username,
+            "text": comment.text,
+            "comment_count": post.comments.count(),
+        })
+    return JsonResponse({"error": "empty"}, status=400)
 
 @login_required
 def edit_post(request, post_id):
@@ -71,6 +83,7 @@ def edit_post(request, post_id):
             return redirect("posts:feed")
     return render(request, "posts/edit_post.html", {"post": post})
 
+
 @login_required
 def delete_post(request, post_id):
     post = get_object_or_404(Post, id=post_id, author=request.user)
@@ -80,10 +93,10 @@ def delete_post(request, post_id):
         return redirect("posts:feed")
     return render(request, "posts/delete_post.html", {"post": post})
 
+
 @login_required
 def delete_comment(request, comment_id):
     comment = get_object_or_404(Comment, id=comment_id, author=request.user)
-    post_id = comment.post.id
     if request.method == "POST":
         comment.delete()
         messages.success(request, "Коментар видалено")
