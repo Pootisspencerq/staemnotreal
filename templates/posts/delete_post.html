@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<h3>Видалити пост?</h3>
+<p>{{ post.text }}</p>
+<form method="post">
+  {% csrf_token %}
+  <button class="btn btn-danger">Так, видалити</button>
+  <a href="{% url 'posts:feed' %}" class="btn btn-secondary">Скасувати</a>
+</form>
+{% endblock %}

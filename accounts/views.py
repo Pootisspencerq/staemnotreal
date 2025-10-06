@@ -1,19 +1,37 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model, login
 from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth import login
+from django.contrib import messages
 
 from .forms import ProfileForm
 from .models import Profile, Follow
-from django.contrib.auth import get_user_model
 
-@login_required
-def profile_view(request, username=None):
-    if username:
-        user = get_object_or_404(User, username=username)
+User = get_user_model()
+
+# -------------------
+# Реєстрація
+# -------------------
+def register_view(request):
+    if request.method == "POST":
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)  # авто-логін після реєстрації
+            messages.success(request, "Акаунт створено успішно!")
+            return redirect("posts:feed")  # заміни на свою домашню
     else:
-        user = request.user
+        form = UserCreationForm()
+    return render(request, "accounts/register.html", {"form": form})
+
+
+# -------------------
+# Профіль
+# -------------------
+@login_required
+def profile_detail(request, username):
+    user = get_object_or_404(User, username=username)
+    profile, _ = Profile.objects.get_or_create(user=user)
 
     # Перевірка чи request.user вже підписаний
     is_following = False
@@ -27,59 +45,32 @@ def profile_view(request, username=None):
         "accounts/profile.html",
         {
             "profile_user": user,
+            "profile": profile,
             "is_following": is_following,
         },
     )
-User = get_user_model()
 
-@login_required
-def profile_detail(request, username):
-    user = get_object_or_404(User, username=username)
-    profile, _ = Profile.objects.get_or_create(user=user)
-    return render(request, 'profiles/detail.html', {'profile': profile})
 
 @login_required
 def edit_profile(request):
-    profile, _ = Profile.objects.get_or_create(user=request.user)
-    if request.method == 'POST':
-        profile.bio = request.POST.get('bio', profile.bio)
-        profile.save()
-        return redirect('profiles:detail', username=request.user.username)
-    return render(request, 'profiles/edit.html', {'profile': profile})
-
-
-@login_required
-def edit_profile_view(request):
     # Ensure profile exists
-    profile, created = Profile.objects.get_or_create(user=request.user)
+    profile, _ = Profile.objects.get_or_create(user=request.user)
 
     if request.method == "POST":
         form = ProfileForm(request.POST, request.FILES, instance=profile)
         if form.is_valid():
             form.save()
-            return redirect("accounts:my_profile")
+            messages.success(request, "Профіль оновлено!")
+            return redirect("accounts:profile", username=request.user.username)
     else:
         form = ProfileForm(instance=profile)
 
     return render(request, "accounts/edit_profile.html", {"form": form})
 
 
-def register_view(request):
-    if request.method == "POST":
-        form = UserCreationForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            login(request, user)  # авто-логін після реєстрації
-            return redirect("posts:feed")  # можна замінити на свою домашню сторінку
-    else:
-        form = UserCreationForm()
-    return render(request, "accounts/register.html", {"form": form})
-
-
 # -------------------
-# Нове: підписки
+# Підписки
 # -------------------
-
 @login_required
 def follow_user(request, username):
     target = get_object_or_404(User, username=username)

@@ -7,16 +7,16 @@
     <h2 class="text-center mb-4">Edit Profile</h2>
 
     <!-- Show current avatar -->
-    {% if user_profile.avatar %}
+    {% if request.user.accounts_profile.avatar %}
         <div class="mb-3 text-center">
-            <img src="{{ user_profile.avatar.url }}" alt="Avatar" style="width:120px; height:120px; object-fit:cover; border-radius:50%;">
+            <img src="{{ request.user.accounts_profile.avatar.url }}" alt="Avatar" style="width:120px; height:120px; object-fit:cover; border-radius:50%;">
         </div>
     {% endif %}
 
     <!-- Show current cover -->
-    {% if user_profile.cover %}
+    {% if request.user.accounts_profile.cover %}
         <div class="mb-3">
-            <img src="{{ user_profile.cover.url }}" alt="Cover" style="width:100%; height:200px; object-fit:cover;">
+            <img src="{{ request.user.accounts_profile.cover.url }}" alt="Cover" style="width:100%; height:200px; object-fit:cover;">
         </div>
     {% endif %}
 

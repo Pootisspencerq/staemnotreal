@@ -2,56 +2,53 @@
 {% block content %}
 <h2>News Feed</h2>
 
-<!-- Створення поста -->
 <form method="post">
   {% csrf_token %}
-  <textarea name="text" class="form-control mb-2" rows="3" placeholder="What's on your mind?"></textarea>
-  <button class="btn btn-primary">Post</button>
+  <textarea name="text" class="form-control mb-2" rows="3" placeholder="Що у вас нового?"></textarea>
+  <button class="btn btn-primary">Опублікувати</button>
 </form>
 
 <hr>
 
-<!-- Список постів -->
 {% for post in posts %}
-  <div class="card bg-secondary text-light mb-3">
+  <div class="card mb-3">
     <div class="card-body">
-      <h6>@{{ post.author.username }}</h6>
+      <strong>{{ post.author.username }}</strong> · {{ post.created_at|date:"H:i d.m.Y" }}
       <p>{{ post.text }}</p>
-      <small>{{ post.created_at|date:"H:i d/m/Y" }}</small>
-
-      <hr>
 
       <!-- Лайки -->
-      <div>
-        <a href="{% url 'posts:toggle_like' post.id %}" class="btn btn-sm 
-          {% if request.user in post.likes.all %}btn-danger{% else %}btn-success{% endif %}">
-          {% if request.user in post.likes.all %}Unlike{% else %}Like{% endif %}
-        </a>
-        <span>{{ post.likes.count }} ❤️</span>
-      </div>
+      <form action="{% url 'posts:toggle_like' post.id %}" method="post" style="display:inline">
+        {% csrf_token %}
+        <button class="btn btn-sm {% if post.liked_by_user %}btn-danger{% else %}btn-outline-danger{% endif %}">
+          ❤ {{ post.like_count }}
+        </button>
+      </form>
+
+      <!-- Редагування/видалення -->
+      {% if post.author == user %}
+        <a href="{% url 'posts:edit_post' post.id %}" class="btn btn-sm btn-warning">✎</a>
+        <a href="{% url 'posts:delete_post' post.id %}" class="btn btn-sm btn-danger">🗑</a>
+      {% endif %}
 
       <!-- Коментарі -->
       <div class="mt-2">
-        <strong>Comments ({{ post.comments.count }})</strong>
-        <ul class="list-unstyled">
-          {% for comment in post.comments.all %}
-            <li>
-              <small><b>@{{ comment.author.username }}</b> {{ comment.text }} ({{ comment.created_at|date:"H:i" }})</small>
-            </li>
-          {% empty %}
-            <li><small>No comments yet.</small></li>
-          {% endfor %}
-        </ul>
+        {% for comment in post.comments.all %}
+          <p>
+            <b>{{ comment.author.username }}</b>: {{ comment.text }}
+            {% if comment.author == user %}
+              <a href="{% url 'posts:delete_comment' comment.id %}" class="text-danger">[x]</a>
+            {% endif %}
+          </p>
+        {% endfor %}
 
-        <!-- Форма додавання коментаря -->
-        <form method="post" action="{% url 'posts:add_comment' post.id %}">
+        <form action="{% url 'posts:add_comment' post.id %}" method="post">
           {% csrf_token %}
-          <input type="text" name="text" class="form-control form-control-sm" placeholder="Write a comment...">
+          <input type="text" name="text" placeholder="Напишіть коментар..." class="form-control form-control-sm">
         </form>
       </div>
     </div>
   </div>
 {% empty %}
-  <p>No posts yet.</p>
+  <p>Ще немає постів 🙃</p>
 {% endfor %}
 {% endblock %}

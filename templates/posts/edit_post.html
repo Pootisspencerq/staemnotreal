@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<h3>Редагувати пост</h3>
+<form method="post">
+  {% csrf_token %}
+  <textarea name="text" class="form-control mb-2" rows="3">{{ post.text }}</textarea>
+  <button class="btn btn-primary">Зберегти</button>
+</form>
+{% endblock %}
