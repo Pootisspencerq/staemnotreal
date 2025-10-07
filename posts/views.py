@@ -3,9 +3,9 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
 from django.http import JsonResponse
 from .models import Post, Like, Comment
-from accounts.models import Follow
 from django.contrib import messages
 from django.views.decorators.http import require_POST
+
 User = get_user_model()
 
 
@@ -13,17 +13,14 @@ User = get_user_model()
 def feed_view(request):
     if request.method == "POST":
         text = request.POST.get("text")
-        img = request.FILES.get("img")  # 🟢 беремо файл
-        if text or img:  # дозволяємо пости тільки з текстом, тільки з картинкою або обидва
+        img = request.FILES.get("img")
+        if text or img:
             Post.objects.create(author=request.user, text=text, img=img)
         return redirect("posts:feed")
 
     posts = Post.objects.all().select_related("author").prefetch_related("comments", "likes")
     for post in posts:
-        post.liked_by_user = (
-            request.user.is_authenticated
-            and post.likes.filter(user=request.user).exists()
-        )
+        post.liked_by_user = request.user.is_authenticated and post.likes.filter(user=request.user).exists()
     return render(request, "posts/feed.html", {"posts": posts})
 
 
@@ -31,7 +28,7 @@ def feed_view(request):
 def create_post(request):
     if request.method == "POST":
         text = request.POST.get("text")
-        img = request.FILES.get("img")  # 🟢 беремо файл
+        img = request.FILES.get("img")
         if text or img:
             Post.objects.create(author=request.user, text=text, img=img)
         return redirect("posts:feed")
@@ -57,19 +54,25 @@ def toggle_like(request, post_id):
     })
 
 
-@login_required
-@require_POST
 def add_comment(request, post_id):
-    post = get_object_or_404(Post, id=post_id)
-    text = request.POST.get("text")
-    if text:
-        comment = Comment.objects.create(post=post, author=request.user, text=text)
-        return JsonResponse({
-            "author": comment.author.username,
-            "text": comment.text,
-            "comment_count": post.comments.count(),
-        })
-    return JsonResponse({"error": "empty"}, status=400)
+    if request.method == 'POST' and request.user.is_authenticated:
+        post = get_object_or_404(Post, id=post_id)
+        text = request.POST.get('text', '').strip()
+        if text:
+            comment = Comment.objects.create(post=post, author=request.user, text=text)
+            comment_count = post.comments.count()
+            avatar_url = '/static/images/default-avatar.png'
+            if hasattr(comment.author, 'profile') and comment.author.profile.avatar:
+                avatar_url = comment.author.profile.avatar.url
+            return JsonResponse({
+                'comment_id': comment.id,
+                'text': comment.text,
+                'author': comment.author.username,
+                'avatar_url': avatar_url,
+                'comment_count': comment_count
+            })
+    return JsonResponse({'error': 'Не вдалося додати коментар'}, status=400)
+
 
 @login_required
 def edit_post(request, post_id):
@@ -86,18 +89,23 @@ def edit_post(request, post_id):
 
 @login_required
 def delete_post(request, post_id):
-    post = get_object_or_404(Post, id=post_id, author=request.user)
+    post = get_object_or_404(Post, id=post_id)
+    if not request.user.is_staff and not request.user.is_superuser:
+        messages.error(request, "Ви не маєте права видаляти цей пост")
+        return redirect("posts:feed")
+
     if request.method == "POST":
         post.delete()
         messages.success(request, "Пост видалено")
         return redirect("posts:feed")
+
     return render(request, "posts/delete_post.html", {"post": post})
 
 
 @login_required
 def delete_comment(request, comment_id):
-    comment = get_object_or_404(Comment, id=comment_id, author=request.user)
-    if request.method == "POST":
+    comment = get_object_or_404(Comment, id=comment_id)
+    if request.method == 'POST':
         comment.delete()
-        messages.success(request, "Коментар видалено")
-    return redirect("posts:feed")
+        return redirect('posts:feed')
+    return render(request, 'posts/delete_comment.html', {'comment': comment})
