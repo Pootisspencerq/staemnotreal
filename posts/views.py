@@ -54,24 +54,33 @@ def toggle_like(request, post_id):
     })
 
 
+@require_POST
+@login_required
 def add_comment(request, post_id):
-    if request.method == 'POST' and request.user.is_authenticated:
-        post = get_object_or_404(Post, id=post_id)
-        text = request.POST.get('text', '').strip()
-        if text:
-            comment = Comment.objects.create(post=post, author=request.user, text=text)
-            comment_count = post.comments.count()
-            avatar_url = '/static/images/default-avatar.png'
-            if hasattr(comment.author, 'profile') and comment.author.profile.avatar:
-                avatar_url = comment.author.profile.avatar.url
-            return JsonResponse({
-                'comment_id': comment.id,
-                'text': comment.text,
-                'author': comment.author.username,
-                'avatar_url': avatar_url,
-                'comment_count': comment_count
-            })
-    return JsonResponse({'error': 'Не вдалося додати коментар'}, status=400)
+    post = get_object_or_404(Post, id=post_id)
+    text = request.POST.get('text', '').strip()
+    if not text:
+        return JsonResponse({'error': 'Коментар не може бути порожнім'}, status=400)
+
+    comment = Comment.objects.create(
+        post=post,
+        author=request.user,
+        text=text
+    )
+
+    # Аватар або стандартний
+    if hasattr(request.user, 'profile') and request.user.profile.avatar:
+        avatar_url = request.user.profile.avatar.url
+    else:
+        avatar_url = '/static/images/default-avatar.png'
+
+    return JsonResponse({
+        'comment_id': comment.id,
+        'author': request.user.username,
+        'text': comment.text,
+        'avatar_url': avatar_url,
+        'comment_count': post.comments.count(),
+    })
 
 
 @login_required
@@ -109,3 +118,4 @@ def delete_comment(request, comment_id):
         comment.delete()
         return redirect('posts:feed')
     return render(request, 'posts/delete_comment.html', {'comment': comment})
+posts = Post.objects.select_related('author', 'author__profile').all()

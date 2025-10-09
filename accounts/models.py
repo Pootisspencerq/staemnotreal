@@ -11,9 +11,9 @@ class Profile(models.Model):
         ('admin', 'Admin'),
     )
 
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='accounts_profile')
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
     bio = models.TextField(blank=True, null=True)
-    avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
     favorite_color = models.CharField(max_length=7, blank=True, null=True)
     cover = models.ImageField(upload_to='covers/', blank=True, null=True)
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='user')

@@ -20,6 +20,8 @@
   .comment-input { background-color: #1c1c1c; border: 1px solid #333; color: #fff; }
   .input-group .btn { border-color: #333; }
   img.rounded { border: 1px solid #333; }
+  .avatar-post { width: 40px; height: 40px; object-fit: cover; border-radius: 50%; }
+  .avatar-comment { width: 30px; height: 30px; object-fit: cover; border-radius: 50%; }
 </style>
 
 <div class="container py-4">
@@ -39,12 +41,12 @@
       <div class="card-body">
         <div class="post-header d-flex align-items-center mb-3">
           {% if post.author.profile.avatar %}
-            <img src="{{ post.author.profile.avatar.url }}" alt="avatar" class="avatar-img me-2"
-                 onerror="this.onerror=null;this.src='{% static 'images/default-avatar.png' %}'">
+              <img src="{{ post.author.profile.avatar.url }}" alt="avatar" class="avatar-post" 
+                   onerror="this.onerror=null;this.src='{% static 'images/default-avatar.png' %}'">
           {% else %}
-            <img src="{% static 'images/default-avatar.png' %}" alt="avatar" class="avatar-img me-2">
+              <img src="{% static 'images/default-avatar.png' %}" alt="avatar" class="avatar-post">
           {% endif %}
-          <div class="d-flex flex-column">
+          <div class="d-flex flex-column ms-2">
             <strong class="text-light">{{ post.author.username }}</strong>
             <small class="text-muted">{{ post.created_at|date:"H:i d.m.Y" }}</small>
           </div>
@@ -80,10 +82,10 @@
             <div class="d-flex justify-content-between align-items-start mb-2">
               <p class="mb-1 flex-grow-1 d-flex align-items-center">
                 {% if comment.author.profile.avatar %}
-                  <img src="{{ comment.author.profile.avatar.url }}" alt="avatar" class="rounded-circle me-1" width="24" height="24"
-                       onerror="this.onerror=null;this.src='{% static 'images/default-avatar.png' %}'">
+                    <img src="{{ comment.author.profile.avatar.url }}" alt="avatar" class="avatar-comment me-1"
+                         onerror="this.onerror=null;this.src='{% static 'images/default-avatar.png' %}'">
                 {% else %}
-                  <img src="{% static 'images/default-avatar.png' %}" alt="avatar" class="rounded-circle me-1" width="24" height="24">
+                  <img src="{% static 'images/default-avatar.png' %}" alt="avatar" class="avatar-comment me-1">
                 {% endif %}
                 <b>{{ comment.author.username }}</b>: {{ comment.text }}
               </p>
@@ -139,11 +141,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const noComments = commentsBlock.querySelector('.no-comments');
         if (noComments) noComments.remove();
 
+        const avatarUrl = data.avatar_url || "{% static 'images/default-avatar.png' %}";
+
         const newComment = document.createElement('div');
         newComment.className = 'd-flex justify-content-between align-items-start mb-2';
         newComment.innerHTML = `
           <p class="mb-1 flex-grow-1 d-flex align-items-center">
-            <img src="${data.avatar_url}" alt="avatar" class="rounded-circle me-1" width="24" height="24">
+            <img src="${avatarUrl}" alt="avatar" class="avatar-comment me-1">
             <b>${data.author}</b>: ${data.text}
           </p>
           <a href="/posts/comment/${data.comment_id}/delete/" class="btn btn-link btn-sm text-danger p-0" onclick="return confirm('Видалити коментар?')">
