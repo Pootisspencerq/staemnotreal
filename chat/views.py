@@ -1,5 +1,8 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 
-def index(request):
-    return HttpResponse('Placeholder for app index: %s' % (request.path,))
+from django.contrib.auth.decorators import login_required
+
+@login_required
+def inbox(request):
+    return render(request, 'chat/inbox.html')

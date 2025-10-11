@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 
-def index(request):
-    return HttpResponse('Placeholder for app index: %s' % (request.path,))
+
+def notification_list(request):
+    return render(request, 'notifications/notification_list.html')

@@ -3,21 +3,24 @@ from django.urls import path, include
 from staem_home import home
 from django.conf import settings
 from django.conf.urls.static import static
+
 urlpatterns = [
+    # Admin panel
     path("admin/", admin.site.urls),
 
     # Homepage
     path("", home, name="home"),
 
-    # Apps
-    path("accounts/", include("accounts.urls")),  # handles login/logout/register/profile
-    path("posts/", include("posts.urls")),        # feed & post URLs
+    # Core apps
+    path("accounts/", include("accounts.urls")),  # Login / Register / Profile
+    path("posts/", include("posts.urls")),        # Feed & posts
+    path("chat/", include("chat.urls")),          # Messaging
 
-    # Optional: other apps
-    path("chat/", include("chat.urls")),
-    path("groups/", include("groups.urls")),
-    
+    # Other apps
+    path("groups/", include("groups.urls")),          
     path("notifications/", include("notifications.urls")),
- ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+]
+
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
