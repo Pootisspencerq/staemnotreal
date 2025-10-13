@@ -7,14 +7,7 @@ from .models import Profile
 def create_or_update_profile(sender, instance, created, **kwargs):
     """
     Створює профіль при реєстрації користувача
-    або оновлює існуючий профіль.
+    або перевіряє наявність існуючого профілю.
     """
-    # Створення нового профілю, якщо його немає
-    profile, _ = Profile.objects.get_or_create(user=instance)
-
-    # Оновлення профілю
-    profile.save()
-@receiver(post_save, sender=User)
-def create_or_update_profile(sender, instance, created, **kwargs):
-    profile, _ = Profile.objects.get_or_create(user=instance)
-    profile.save()
+    # Створюємо тільки якщо профілю немає
+    Profile.objects.get_or_create(user=instance)

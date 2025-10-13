@@ -2,13 +2,13 @@
 
 {% block content %}
 <div class="container mt-5">
-    <h2>{{ profile_user.username }}'s Profile</h2>
+    <h2>Профіль користувача {{ profile_user.username }}</h2>
     {% if profile.avatar %}
-        <img src="{{ profile.avatar.url }}" alt="Avatar" class="img-thumbnail" width="150">
+        <img src="{{ profile.avatar.url }}" alt="Аватар" class="img-thumbnail" width="150">
     {% endif %}
-    <p><strong>Bio:</strong> {{ profile.bio }}</p>
+    <p><strong>Про себе:</strong> {{ profile.bio }}</p>
     {% if profile.favorite_color %}
-        <p><strong>Favorite color:</strong> 
+        <p><strong>Улюблений колір:</strong> 
             <span style="color: {{ profile.favorite_color }}">
                 {{ profile.favorite_color }}
             </span>
@@ -16,7 +16,7 @@
     {% endif %}
 
     {% if profile_user == user %}
-        <a href="{% url 'accounts:edit_profile' %}" class="btn btn-secondary mt-3">Edit Profile</a>
+        <a href="{% url 'accounts:edit_profile' %}" class="btn btn-secondary mt-3">Редагувати профіль</a>
     {% endif %}
 </div>
 {% endblock %}

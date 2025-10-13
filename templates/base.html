@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 {% load static %}
-<html lang="en">
+<html lang="uk">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -35,21 +35,19 @@
 </head>
 <body class="bg-dark text-light">
 
-<!-- NAVBAR -->
+<!-- НАВІГАЦІЯ -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-secondary shadow-sm">
   <div class="container-fluid">
     <a class="navbar-brand" href="/">
       <div style="display: flex; align-items: center; gap: 10px;">
-  <img src="media/176020627167396150.png" alt="StaemNotReal" style="width:40px; height:auto; border-radius:8px;">
-  <span style="font-size: 20px; font-weight: bold; color: white;">StaemNotReal</span>
-</div>
-
-
+        <img src="/media/176020627167396150.png" alt="StaemNotReal" style="width:40px; height:auto; border-radius:8px;">
+        <span style="font-size: 20px; font-weight: bold; color: white;">StaemNotReal</span>
+      </div>
     </a>
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
             data-bs-target="#navbarNav" aria-controls="navbarNav"
-            aria-expanded="false" aria-label="Toggle navigation">
+            aria-expanded="false" aria-label="Перемикач навігації">
       <span class="navbar-toggler-icon"></span>
     </button>
 
@@ -57,37 +55,35 @@
       <ul class="navbar-nav ms-auto">
 
         {% if user.is_authenticated %}
-          <!-- Other Apps -->
-          <li class="nav-item"><a class="nav-link" href="{% url 'posts:feed' %}"><i class="bi bi-newspaper"></i> Feed</a></li>
-          <li class="nav-item"><a class="nav-link" href="{% url 'chat:inbox' %}"><i class="bi bi-chat-dots"></i> Chat</a></li>
-          <li class="nav-item"><a class="nav-link" href="{% url 'groups:list' %}"><i class="bi bi-people"></i> Groups</a></li>
-          <li class="nav-item"><a class="nav-link" href="{% url 'notifications:list' %}"><i class="bi bi-bell"></i> Notifications</a></li>
+          <!-- Меню розділів -->
+          <li class="nav-item"><a class="nav-link" href="{% url 'posts:feed' %}"><i class="bi bi-newspaper"></i> Стрічка</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'chat:inbox' %}"><i class="bi bi-chat-dots"></i> Чати</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'groups:list' %}"><i class="bi bi-people"></i> Групи</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'notifications:list' %}"><i class="bi bi-bell"></i> Сповіщення</a></li>
           
-         
-
-          <!-- Avatar Dropdown -->
+          <!-- Аватар та профіль -->
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="navbarDropdown"
                role="button" data-bs-toggle="dropdown" aria-expanded="false">
               {% if user_profile.avatar %}
-                <img src="{{ user_profile.avatar.url }}" alt="Avatar"
+                <img src="{{ user_profile.avatar.url }}" alt="Аватар"
                      style="width:32px; height:32px; border-radius:50%; object-fit:cover; margin-right:8px;">
               {% else %}
-                <img src="{% static 'default-avatar.png' %}" alt="Avatar"
+                <img src="{% static 'default-avatar.png' %}" alt="Аватар"
                      style="width:32px; height:32px; border-radius:50%; object-fit:cover; margin-right:8px;">
               {% endif %}
               {{ user.username }}
             </a>
 
             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-              <li><a class="dropdown-item" href="{% url 'accounts:profile' user.username %}"><i class="bi bi-person"></i> Profile</a></li>
-              <li><a class="dropdown-item" href="{% url 'accounts:edit_profile' %}"><i class="bi bi-pencil-square"></i> Edit Profile</a></li>
+              <li><a class="dropdown-item" href="{% url 'accounts:profile' user.username %}"><i class="bi bi-person"></i> Мій профіль</a></li>
+              <li><a class="dropdown-item" href="{% url 'accounts:edit_profile' %}"><i class="bi bi-pencil-square"></i> Редагувати профіль</a></li>
               <li><hr class="dropdown-divider"></li>
               <li>
                 <form method="post" action="{% url 'accounts:logout' %}" class="px-3 py-1">
                   {% csrf_token %}
                   <button type="submit" class="btn btn-link text-decoration-none text-danger p-0">
-                    <i class="bi bi-box-arrow-right"></i> Logout
+                    <i class="bi bi-box-arrow-right"></i> Вийти
                   </button>
                 </form>
               </li>
@@ -95,16 +91,16 @@
           </li>
 
         {% else %}
-          <!-- If not logged in -->
-          <li class="nav-item"><a class="nav-link" href="{% url 'accounts:login' %}"><i class="bi bi-box-arrow-in-right"></i> Login</a></li>
-          <li class="nav-item"><a class="nav-link" href="{% url 'accounts:register' %}"><i class="bi bi-person-plus"></i> Register</a></li>
+          <!-- Якщо користувач не авторизований -->
+          <li class="nav-item"><a class="nav-link" href="{% url 'accounts:login' %}"><i class="bi bi-box-arrow-in-right"></i> Увійти</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'accounts:register' %}"><i class="bi bi-person-plus"></i> Зареєструватися</a></li>
         {% endif %}
       </ul>
     </div>
   </div>
 </nav>
 
-<!-- MAIN CONTENT -->
+<!-- ГОЛОВНИЙ ВМІСТ -->
 <div class="container mt-4">
   {% block content %}{% endblock %}
 </div>

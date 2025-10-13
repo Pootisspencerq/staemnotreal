@@ -2,14 +2,33 @@
 
 {% block content %}
 <div class="container mt-5" style="max-width: 400px;">
-    <h2 class="text-center mb-4">Register</h2>
-    <form method="post">
+    <h2 class="text-center mb-4">Реєстрація</h2>
+    <form method="post" class="p-3 border rounded bg-light shadow-sm">
         {% csrf_token %}
         {{ form.as_p }}
-        <button type="submit" class="btn btn-success w-100">Register</button>
+        <button type="submit" class="btn btn-success w-100 mt-2">Зареєструватися</button>
     </form>
     <p class="text-center mt-3">
-        Already have an account? <a href="{% url 'accounts:login' %}">Log in here</a>
+        Вже маєте акаунт?
+        <a href="{% url 'accounts:login' %}">Увійдіть тут</a>
     </p>
 </div>
+
+<style>
+/* 🔲 Темна тема */
+body.dark-mode .bg-light {
+    background-color: #1e1e1e !important;
+    color: #f5f5f5 !important;
+}
+body.dark-mode .border {
+    border-color: #333 !important;
+}
+body.dark-mode a {
+    color: #00bfff;
+}
+body.dark-mode .btn-success {
+    background-color: #28a745 !important;
+    border-color: #28a745 !important;
+}
+</style>
 {% endblock %}

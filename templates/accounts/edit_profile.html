@@ -1,29 +1,29 @@
 {% extends "base.html" %}
 
-{% block title %}Edit Profile{% endblock %}
+{% block title %}Редагувати профіль{% endblock %}
 
 {% block content %}
 <div class="container mt-5" style="max-width: 600px;">
-    <h2 class="text-center mb-4">Edit Profile</h2>
+    <h2 class="text-center mb-4">Редагувати профіль</h2>
 
-    <!-- Show current avatar -->
+    <!-- Поточний аватар -->
     {% if user_profile.avatar %}
         <div class="mb-3 text-center">
-            <img src="{{ user_profile.avatar.url }}" alt="Avatar" style="width:120px; height:120px; object-fit:cover; border-radius:50%;">
+            <img src="{{ user_profile.avatar.url }}" alt="Аватар" style="width:120px; height:120px; object-fit:cover; border-radius:50%;">
         </div>
     {% endif %}
 
-    <!-- Show current cover -->
+    <!-- Поточний обкладинка -->
     {% if user_profile.cover %}
         <div class="mb-3">
-            <img src="{{ user_profile.cover.url }}" alt="Cover" style="width:100%; height:200px; object-fit:cover;">
+            <img src="{{ user_profile.cover.url }}" alt="Обкладинка" style="width:100%; height:200px; object-fit:cover;">
         </div>
     {% endif %}
 
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         {{ form.as_p }}
-        <button type="submit" class="btn btn-primary w-100">Save Changes</button>
+        <button type="submit" class="btn btn-primary w-100">Зберегти зміни</button>
     </form>
 </div>
 {% endblock %}
