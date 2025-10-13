@@ -8,6 +8,9 @@ class Post(models.Model):
     text = models.TextField(null=True, blank=True)
     img = models.ImageField(null=True, blank=True, upload_to='posts/')
     created_at = models.DateTimeField(auto_now_add=True)
+    video = models.FileField(null=True, blank=True, upload_to='videos/')
+    link = models.URLField(null=True, blank=True)
+    shared_from = models.ForeignKey('self', null=True, blank=True, on_delete=models.SET_NULL, related_name='shares')
 
     class Meta:
         ordering = ["-created_at"]
@@ -47,3 +50,11 @@ class Comment(models.Model):
 
     def __str__(self):
         return f"Comment by {self.author.username} on Post {self.post.id}"
+    
+class Repost(models.Model):
+    original_post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="reposts")
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} reposted {self.original_post.id}"

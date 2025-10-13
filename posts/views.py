@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
 from django.http import JsonResponse
-from .models import Post, Like, Comment
+from .models import Post, Like, Comment, Repost
 from django.contrib import messages
 from django.views.decorators.http import require_POST
 
@@ -99,7 +99,7 @@ def edit_post(request, post_id):
 @login_required
 def delete_post(request, post_id):
     post = get_object_or_404(Post, id=post_id)
-    if not request.user.is_staff and not request.user.is_superuser:
+    if request.user != post.author and not request.user.is_staff and not request.user.is_superuser:
         messages.error(request, "Ви не маєте права видаляти цей пост")
         return redirect("posts:feed")
 
@@ -114,8 +114,23 @@ def delete_post(request, post_id):
 @login_required
 def delete_comment(request, comment_id):
     comment = get_object_or_404(Comment, id=comment_id)
-    if request.method == 'POST':
+    if request.user != comment.author and not request.user.is_staff and not request.user.is_superuser:
+        messages.error(request, "Ви не маєте права видаляти цей коментар")
+        return redirect("posts:feed")
+
+    if request.method == "POST":
         comment.delete()
-        return redirect('posts:feed')
-    return render(request, 'posts/delete_comment.html', {'comment': comment})
-posts = Post.objects.select_related('author', 'author__profile').all()
+        messages.success(request, "Коментар видалено")
+        return redirect("posts:feed")
+
+    return render(request, "posts/delete_comment.html", {"comment": comment})
+@login_required
+def repost_post(request, post_id):
+    post = get_object_or_404(Post, id=post_id)
+    # Не дозволяємо репостити кілька разів
+    if not Repost.objects.filter(user=request.user, original_post=post).exists():
+        Repost.objects.create(user=request.user, original_post=post)
+        messages.success(request, "Пост репостнуто!")
+    else:
+        messages.info(request, "Ви вже репостили цей пост.")
+    return redirect("posts:feed")

@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model, login
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
-
+from django.contrib.auth import logout
 from .forms import ProfileForm
 from .models import Profile, Follow
 
@@ -23,9 +23,11 @@ def register_view(request):
     else:
         form = UserCreationForm()
     return render(request, "accounts/register.html", {"form": form})
+ 
 
-
-
+def logout_view(request):
+    logout(request)
+    return redirect('/')
 
 # -------------------
 # Профіль

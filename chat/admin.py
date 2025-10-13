@@ -4,14 +4,10 @@ from .models import Chat, Message
 
 @admin.register(Chat)
 class ChatAdmin(admin.ModelAdmin):
-    list_display = ("id", "name", "created_at")
-    search_fields = ("name",)
-    ordering = ("-created_at",)
-
+    list_display = ("id", "name")  # видалити created_at
+    # ordering = ("created_at",)   # видалити або замінити на "id"
 
 @admin.register(Message)
 class MessageAdmin(admin.ModelAdmin):
-    list_display = ("id", "chat", "author", "created_at")
-    search_fields = ("content",)
-    list_filter = ("chat", "author")
-    ordering = ("-created_at",)
+    list_display = ("id", "chat", "author", "text", "created_at")
+    ordering = ("created_at",)

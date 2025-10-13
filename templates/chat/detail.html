@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}{{ chat.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-3"><i class="bi bi-chat-dots"></i> {{ chat.name }}</h2>
+
+    <!-- Чат-бокс -->
+    <div id="chat-box" class="border rounded p-3 mb-3" style="height: 400px; overflow-y: auto; background: #1c1c1c;">
+        {% if chat.messages.exists %}
+            {% for msg in chat.messages.all %}
+                <div class="mb-2">
+                    <strong class="text-info">{{ msg.author.username }}</strong>:
+                    <span class="text-light">{{ msg.text }}</span>
+                    {% if msg.image %}
+                        <div>
+                            <img src="{{ msg.image.url }}" alt="Фото" class="img-fluid rounded mt-1" style="max-height:200px;">
+                        </div>
+                    {% endif %}
+                    <div class="text-muted small">{{ msg.created_at|date:"d.m.Y H:i" }}</div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="text-center text-secondary mt-5">
+                <i class="bi bi-envelope-paper fs-1"></i>
+                <p class="mt-2">Повідомлень ще немає. Почніть чат!</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Форма для відправки повідомлення + фото -->
+    <form id="chat-form" method="POST" enctype="multipart/form-data" action="{% url 'chat:messages_api' chat.id %}">
+        {% csrf_token %}
+        <input type="text" name="message" class="form-control mb-2" placeholder="Напишіть повідомлення..." required>
+        <input type="file" name="image" class="form-control mb-2" accept="image/*">
+        <button type="submit" class="btn btn-primary">Відправити</button>
+    </form>
+
+    <!-- Кнопка назад до списку чатів -->
+    <a href="{% url 'chat:inbox' %}" class="btn btn-outline-light btn-sm mt-3">
+        <i class="bi bi-arrow-left"></i> Назад до чатів
+    </a>
+</div>
+
+<script>
+const chatBox = document.getElementById('chat-box');
+const form = document.getElementById('chat-form');
+
+// Автопрокрутка до останніх повідомлень
+chatBox.scrollTop = chatBox.scrollHeight;
+
+form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(form);
+    const response = await fetch(form.action, {
+        method: 'POST',
+        body: formData
+    });
+    if(response.ok){
+        const data = await response.json();
+        let msgDiv = document.createElement('div');
+        msgDiv.classList.add('mb-2');
+        msgDiv.innerHTML = `<strong class="text-info">${data.author_username}</strong>: 
+                            <span class="text-light">${data.message}</span>
+                            ${data.image_url ? `<div><img src="${data.image_url}" class="img-fluid rounded mt-1" style="max-height:200px;"></div>` : ''}
+                            <div class="text-muted small">${new Date(data.created_at).toLocaleString()}</div>`;
+        chatBox.appendChild(msgDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+        form.reset();
+    }
+});
+</script>
+{% endblock %}

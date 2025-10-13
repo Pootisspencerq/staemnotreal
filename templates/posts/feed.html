@@ -22,6 +22,7 @@
   img.rounded { border: 1px solid #333; }
   .avatar-post { width: 40px; height: 40px; object-fit: cover; border-radius: 50%; }
   .avatar-comment { width: 30px; height: 30px; object-fit: cover; border-radius: 50%; }
+  .like-btn:hover { filter: brightness(1.2); }
 </style>
 
 <div class="container py-4">
@@ -75,6 +76,12 @@
               <i class="bi bi-trash"></i>
             </a>
           {% endif %}
+          <form action="{% url 'posts:repost_post' post.id %}" method="post" style="display:inline;">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-outline-info btn-sm">
+            <i class="bi bi-arrow-repeat"></i> Репост
+          </button>
+        </form>
         </div>
 
         <div class="mt-3 border-top pt-2 comments-block" data-post="{{ post.id }}">
@@ -114,6 +121,7 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+  // ✅ Коментарі (AJAX)
   document.querySelectorAll('.comment-form').forEach(form => {
     form.addEventListener('submit', async e => {
       e.preventDefault();
@@ -126,17 +134,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const response = await fetch(`/posts/${postId}/comment/`, {
         method: 'POST',
-        headers: {
-          'X-CSRFToken': csrfToken,
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
+        headers: { 'X-CSRFToken': csrfToken, 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({ text })
       });
 
       if (response.ok) {
         const data = await response.json();
-        if (!data.comment_id) return;
-
         const commentsBlock = form.closest('.comments-block');
         const noComments = commentsBlock.querySelector('.no-comments');
         if (noComments) noComments.remove();
@@ -150,13 +153,35 @@ document.addEventListener('DOMContentLoaded', () => {
             <img src="${avatarUrl}" alt="avatar" class="avatar-comment me-1">
             <b>${data.author}</b>: ${data.text}
           </p>
-          <a href="/posts/comment/${data.comment_id}/delete/" class="btn btn-link btn-sm text-danger p-0" onclick="return confirm('Видалити коментар?')">
+          <a href="/posts/comment/${data.comment_id}/delete/" class="btn btn-link btn-sm text-danger p-0">
             <i class="bi bi-x-circle"></i>
           </a>
         `;
         commentsBlock.insertBefore(newComment, form);
         input.value = '';
-        commentsBlock.querySelector('.comment-count').textContent = data.comment_count;
+
+        const postCard = form.closest('.card-body');
+        const commentCountEl = postCard.querySelector('.comment-count');
+        if (commentCountEl) commentCountEl.textContent = data.comment_count;
+      }
+    });
+  });
+
+  // ✅ Лайки (AJAX)
+  document.querySelectorAll('.like-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const postId = btn.dataset.post;
+      const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+      const response = await fetch(`/posts/${postId}/like/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': csrfToken }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        btn.querySelector('.like-count').textContent = data.like_count;
+        btn.classList.toggle('btn-danger', data.liked);
+        btn.classList.toggle('btn-outline-danger', !data.liked);
       }
     });
   });
