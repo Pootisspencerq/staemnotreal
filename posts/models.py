@@ -4,7 +4,7 @@ from django.conf import settings
 
 
 class Post(models.Model):
-    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    author = models.ForeignKey(User, on_delete=models.CASCADE,related_name='posts')
     text = models.TextField(null=True, blank=True)
     img = models.ImageField(null=True, blank=True, upload_to='posts/')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -53,7 +53,7 @@ class Comment(models.Model):
     
 class Repost(models.Model):
     original_post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="reposts")
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE,related_name="reposts")
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
