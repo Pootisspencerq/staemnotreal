@@ -69,8 +69,8 @@ DATABASES = {
 AUTH_PASSWORD_VALIDATORS = []
 
 # --- Мова та час ---
-LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'UTC'
+LANGUAGE_CODE = 'uk-ua'
+TIME_ZONE = 'Europe/Kiev'
 USE_I18N = True
 USE_TZ = True
 

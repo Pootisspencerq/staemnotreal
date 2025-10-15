@@ -1,6 +1,26 @@
 {% extends "base.html" %}
 
 {% block content %}
+<style>
+  body { background-color: #121212; color: #f5f5f5; }
+  .card { background-color: #1e1e1e; border: 1px solid #333; }
+  textarea, input[type="file"], input[type="text"] { background-color: #222; color: #fff; border: 1px solid #444; }
+  textarea::placeholder, input::placeholder { color: #bbb; }
+  .btn-primary { background-color: #007bff; border: none; }
+  .btn-primary:hover { background-color: #0069d9; }
+  .btn-outline-primary { color: #66b0ff; border-color: #66b0ff; }
+  .btn-outline-primary:hover { background-color: #007bff; color: #fff; }
+  .btn-danger { background-color: #dc3545; border: none; }
+  .btn-danger:hover { background-color: #c82333; }
+  .text-muted { color: #aaa !important; }
+  hr { border-top: 1px solid #333; }
+  .comment-input { background-color: #1c1c1c; border: 1px solid #333; color: #fff; }
+  .input-group .btn { border-color: #333; }
+  img.rounded { border: 1px solid #333; }
+  .avatar-post { width: 40px; height: 40px; object-fit: cover; border-radius: 50%; }
+  .avatar-comment { width: 30px; height: 30px; object-fit: cover; border-radius: 50%; }
+  .like-btn:hover { filter: brightness(1.2); }
+</style>
 <div class="container mt-5">
     <h2>Профіль користувача {{ profile_user.username }}</h2>
     {% if profile.avatar %}
@@ -28,8 +48,20 @@
   </li>
 </ul>
 <div class="tab-content" id="pills-tabContent">
-  <div class="tab-pane fade show active" id="pills-home" role="tabpanel" aria-labelledby="pills-home-tab" tabindex="0">...</div>
-  <div class="tab-pane fade" id="pills-profile" role="tabpanel" aria-labelledby="pills-profile-tab" tabindex="0">...
+    
+  <div class="tab-pane fade show active" id="pills-home" role="tabpanel" aria-labelledby="pills-home-tab" tabindex="0">
+    {% for post in profile_user.posts.all %}
+    {% include "posts/post_card.html" with post=post %}
+  {% empty %}
+    <p class="text-center text-muted"><i class="bi bi-hourglass-split"></i> Ще немає постів</p>
+  {% endfor %}
+</div>
+  <div class="tab-pane fade" id="pills-profile" role="tabpanel" aria-labelledby="pills-profile-tab" tabindex="0">
+    {% for post in profile_user.reposts.all %}
+    {% include "posts/post_card.html" with post=post %}
+  {% empty %}
+    <p class="text-center text-muted"><i class="bi bi-hourglass-split"></i> Ще немає репостів</p>
+  {% endfor %}
 
   </div>
 </div>
