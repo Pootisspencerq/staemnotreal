@@ -57,8 +57,8 @@
   {% endfor %}
 </div>
   <div class="tab-pane fade" id="pills-profile" role="tabpanel" aria-labelledby="pills-profile-tab" tabindex="0">
-    {% for post in profile_user.reposts.all %}
-    {% include "posts/post_card.html" with post=post %}
+    {% for repost in profile_user.reposts.all %}
+    {% include "posts/post_card.html" with post=repost.original_post %}
   {% empty %}
     <p class="text-center text-muted"><i class="bi bi-hourglass-split"></i> Ще немає репостів</p>
   {% endfor %}
