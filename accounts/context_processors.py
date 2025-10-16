@@ -1,7 +1,10 @@
-from .models import Profile
+from accounts.models import Profile
 
 def user_profile(request):
     if request.user.is_authenticated:
-        profile, _ = Profile.objects.get_or_create(user=request.user)
-        return {"user_profile": profile}
-    return {}
+        try:
+            profile = Profile.objects.get(user=request.user)
+            return {'user_profile': profile}
+        except Profile.DoesNotExist:
+            return {'user_profile': None}
+    return {'user_profile': None}

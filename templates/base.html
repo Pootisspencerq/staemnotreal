@@ -46,13 +46,14 @@
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="navbarDropdown"
                role="button" data-bs-toggle="dropdown" aria-expanded="false">
-              {% if user_profile.avatar %}
-                <img src="{{ user_profile.avatar.url }}" alt="Аватар"
-                     style="width:32px; height:32px; border-radius:50%; object-fit:cover; margin-right:8px;">
+              {% if user.is_authenticated and user.profile.avatar %}
+                <img src="{{ user.profile.avatar.url }}" alt="Аватар"
+                    style="width:32px; height:32px; border-radius:50%; object-fit:cover; margin-right:8px;">
               {% else %}
                 <img src="{% static 'images/default-avatar.png' %}" alt="Аватар"
-                     style="width:32px; height:32px; border-radius:50%; object-fit:cover; margin-right:8px;">
+                    style="width:32px; height:32px; border-radius:50%; object-fit:cover; margin-right:8px;">
               {% endif %}
+
               {{ user.username }}
             </a>
 
