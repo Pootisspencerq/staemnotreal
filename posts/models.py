@@ -4,13 +4,14 @@ from django.conf import settings
 
 
 class Post(models.Model):
-    author = models.ForeignKey(User, on_delete=models.CASCADE,related_name='posts')
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='posts')
     text = models.TextField(null=True, blank=True)
     img = models.ImageField(null=True, blank=True, upload_to='posts/')
-    created_at = models.DateTimeField(auto_now_add=True)
     video = models.FileField(null=True, blank=True, upload_to='videos/')
+    file = models.FileField(null=True, blank=True, upload_to='files/')  # 🆕 поле
     link = models.URLField(null=True, blank=True)
     shared_from = models.ForeignKey('self', null=True, blank=True, on_delete=models.SET_NULL, related_name='shares')
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ["-created_at"]
@@ -25,6 +26,7 @@ class Post(models.Model):
     @property
     def comment_count(self):
         return self.comments.count()
+
 
 
 class Like(models.Model):

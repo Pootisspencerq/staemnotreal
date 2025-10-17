@@ -14,8 +14,19 @@ def feed_view(request):
     if request.method == "POST":
         text = request.POST.get("text")
         img = request.FILES.get("img")
-        if text or img:
-            Post.objects.create(author=request.user, text=text, img=img)
+        video = request.FILES.get("video")
+        file = request.FILES.get("file")
+        link = request.POST.get("link")
+
+        if text or img or video or file or link:
+            Post.objects.create(
+                author=request.user,
+                text=text,
+                img=img,
+                video=video,
+                file=file,
+                link=link
+            )
         return redirect("posts:feed")
 
     posts = Post.objects.all().select_related("author").prefetch_related("comments", "likes")
@@ -29,10 +40,20 @@ def create_post(request):
     if request.method == "POST":
         text = request.POST.get("text")
         img = request.FILES.get("img")
-        if text or img:
-            Post.objects.create(author=request.user, text=text, img=img)
+        video = request.FILES.get("video")
+        file = request.FILES.get("file")
+        link = request.POST.get("link")
+
+        if text or img or video or file or link:
+            Post.objects.create(
+                author=request.user,
+                text=text,
+                img=img,
+                video=video,
+                file=file,
+                link=link
+            )
         return redirect("posts:feed")
-    return redirect("posts:feed")
 
 
 @login_required

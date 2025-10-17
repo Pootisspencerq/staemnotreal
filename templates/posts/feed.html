@@ -4,6 +4,34 @@
 {% block title %}Стрічка новин{% endblock %}
 
 {% block content %}
+<style>
+  .card-body,
+.card-body p,
+.card-body span,
+.card-body a {
+  color: #f5f5f5 !important;
+}
+  body { background-color: #121212; color: #f5f5f5; }
+  .card { background-color: #1e1e1e; border: 1px solid #333; }
+  textarea, input[type="file"], input[type="text"], input[type="url"] { background-color: #222; color: #fff; border: 1px solid #444; }
+  textarea::placeholder, input::placeholder { color: #bbb; }
+  .btn-primary { background-color: #007bff; border: none; }
+  .btn-primary:hover { background-color: #0069d9; }
+  .btn-outline-primary { color: #66b0ff; border-color: #66b0ff; }
+  .btn-outline-primary:hover { background-color: #007bff; color: #fff; }
+  .btn-danger { background-color: #dc3545; border: none; }
+  .btn-danger:hover { background-color: #c82333; }
+  .text-muted { color: #aaa !important; }
+  hr { border-top: 1px solid #333; }
+  .comment-input { background-color: #1c1c1c; border: 1px solid #333; color: #fff; }
+  .input-group .btn { border-color: #333; }
+  img.rounded { border: 1px solid #333; }
+  .avatar-post { width: 40px; height: 40px; object-fit: cover; border-radius: 50%; }
+  .avatar-comment { width: 30px; height: 30px; object-fit: cover; border-radius: 50%; }
+  .like-btn:hover { filter: brightness(1.2); }
+  video, .post-gif { max-width: 100%; height: auto; margin-top: 10px; }
+  .file-link { display: inline-block; margin-top: 8px; color: #66b0ff; text-decoration: underline; }
+</style>
 
 <div class="container py-4">
   <h2 class="mb-4 text-light"><i class="bi bi-newspaper"></i> Стрічка новин</h2>
@@ -11,14 +39,92 @@
   <form method="post" enctype="multipart/form-data" class="mb-4 p-3 border rounded bg-dark shadow-sm">
     {% csrf_token %}
     <textarea name="text" class="form-control mb-2" rows="3" placeholder="Що у вас нового?"></textarea>
-    <input type="file" name="img" class="form-control mb-2">
+    <input type="file" name="file" class="form-control mb-2" accept="*/*">
+    <input type="url" name="link" class="form-control mb-2" placeholder="Посилання (необов'язково)">
     <button class="btn btn-primary w-100"><i class="bi bi-send-fill"></i> Опублікувати</button>
   </form>
 
   <hr class="my-4">
 
   {% for post in posts %}
-    {% include "posts/post_card.html" with post=post %}
+    <div class="card mb-4">
+      <div class="card-body">
+        <div class="d-flex align-items-center mb-2">
+          {% if post.author.profile.avatar %}
+            <img src="{{ post.author.profile.avatar.url }}" alt="avatar" class="avatar-post me-2">
+          {% else %}
+            <img src="{% static 'images/default-avatar.png' %}" alt="avatar" class="avatar-post me-2">
+          {% endif %}
+          <strong>{{ post.author.username }}</strong>
+        </div>
+
+        {% if post.text %}
+          <p>{{ post.text|linebreaksbr }}</p>
+        {% endif %}
+
+        {% if post.img %}
+          <img src="{{ post.img.url }}" alt="image" class="img-fluid rounded mt-2">
+        {% endif %}
+
+        {% if post.file %}
+          {% with post.file.url|lower as url %}
+            {% if ".gif" in url %}
+              <img src="{{ post.file.url }}" class="post-gif rounded mt-2" alt="GIF">
+            {% elif ".mp4" in url or ".webm" in url or ".ogg" in url %}
+              <video controls class="mt-2">
+                <source src="{{ post.file.url }}">
+                Ваш браузер не підтримує відео.
+              </video>
+              <a href="{{ post.file.url }}" class="file-link d-block mt-1" download>📥 Завантажити відео</a>
+            {% else %}
+              <a href="{{ post.file.url }}" class="file-link d-block mt-2" download>📎 Завантажити файл</a>
+            {% endif %}
+          {% endwith %}
+        {% endif %}
+
+        {% if post.link %}
+          <p class="mt-2"><a href="{{ post.link }}" target="_blank" class="file-link">🔗 {{ post.link }}</a></p>
+        {% endif %}
+
+        <div class="d-flex justify-content-between align-items-center mt-3">
+          <button type="button" class="btn {% if post.liked_by_user %}btn-danger{% else %}btn-outline-danger{% endif %} like-btn" data-post="{{ post.id }}">
+            <i class="bi bi-heart-fill"></i> <span class="like-count">{{ post.like_count }}</span>
+          </button>
+          <span class="text-muted"><i class="bi bi-chat-dots"></i> <span class="comment-count">{{ post.comment_count }}</span></span>
+        </div>
+
+        <hr>
+        <div class="comments-block">
+          {% for comment in post.comments.all %}
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <p class="mb-1 flex-grow-1 d-flex align-items-center">
+                {% if comment.author.profile.avatar %}
+                  <img src="{{ comment.author.profile.avatar.url }}" alt="avatar" class="avatar-comment me-1">
+                {% else %}
+                  <img src="{% static 'images/default-avatar.png' %}" alt="avatar" class="avatar-comment me-1">
+                {% endif %}
+                <b>{{ comment.author.username }}</b>: {{ comment.text }}
+              </p>
+              {% if user == comment.author or user.is_staff %}
+                <a href="{% url 'posts:delete_comment' comment.id %}" class="btn btn-link btn-sm text-danger p-0">
+                  <i class="bi bi-x-circle"></i>
+                </a>
+              {% endif %}
+            </div>
+          {% empty %}
+            <p class="no-comments text-muted mb-1">Ще немає коментарів</p>
+          {% endfor %}
+
+          <form class="comment-form mt-2" data-post="{{ post.id }}">
+            {% csrf_token %}
+            <div class="input-group">
+              <input type="text" name="text" class="form-control comment-input" placeholder="Напишіть коментар...">
+              <button class="btn btn-outline-primary" type="submit"><i class="bi bi-send"></i></button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
   {% empty %}
     <p class="text-center text-muted"><i class="bi bi-hourglass-split"></i> Ще немає постів</p>
   {% endfor %}
@@ -26,7 +132,6 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  // ✅ Коментарі (AJAX)
   document.querySelectorAll('.comment-form').forEach(form => {
     form.addEventListener('submit', async e => {
       e.preventDefault();
@@ -50,7 +155,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (noComments) noComments.remove();
 
         const avatarUrl = data.avatar_url || "{% static 'images/default-avatar.png' %}";
-
         const newComment = document.createElement('div');
         newComment.className = 'd-flex justify-content-between align-items-start mb-2';
         newComment.innerHTML = `
@@ -72,7 +176,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // ✅ Лайки (AJAX)
   document.querySelectorAll('.like-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
       const postId = btn.dataset.post;
@@ -92,5 +195,4 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 </script>
-
 {% endblock %}

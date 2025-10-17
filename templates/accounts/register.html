@@ -13,6 +13,22 @@
         <a href="{% url 'accounts:login' %}">Увійдіть тут</a>
     </p>
 </div>
-
+<style>
+/* 🔲 Темна тема */
+body.dark-mode .bg-light {
+    background-color: #1e1e1e !important;
+    color: #f5f5f5 !important;
+}
+body.dark-mode .border {
+    border-color: #333 !important;
+}
+body.dark-mode a {
+    color: #00bfff;
+}
+body.dark-mode .btn-success {
+    background-color: #28a745 !important;
+    border-color: #28a745 !important;
+}
+</style>
 
 {% endblock %}
