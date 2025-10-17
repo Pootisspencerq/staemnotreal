@@ -5,15 +5,12 @@
 
 {% block content %}
 <style>
-  .card-body,
-.card-body p,
-.card-body span,
-.card-body a {
-  color: #f5f5f5 !important;
-}
+  .card-body, .card-body p, .card-body span, .card-body a { color: #f5f5f5 !important; }
   body { background-color: #121212; color: #f5f5f5; }
   .card { background-color: #1e1e1e; border: 1px solid #333; }
-  textarea, input[type="file"], input[type="text"], input[type="url"] { background-color: #222; color: #fff; border: 1px solid #444; }
+  textarea, input[type="file"], input[type="text"], input[type="url"] {
+    background-color: #222; color: #fff; border: 1px solid #444;
+  }
   textarea::placeholder, input::placeholder { color: #bbb; }
   .btn-primary { background-color: #007bff; border: none; }
   .btn-primary:hover { background-color: #0069d9; }
@@ -29,7 +26,7 @@
   .avatar-post { width: 40px; height: 40px; object-fit: cover; border-radius: 50%; }
   .avatar-comment { width: 30px; height: 30px; object-fit: cover; border-radius: 50%; }
   .like-btn:hover { filter: brightness(1.2); }
-  video, .post-gif { max-width: 100%; height: auto; margin-top: 10px; }
+  video, .post-gif, audio { max-width: 100%; height: auto; margin-top: 10px; }
   .file-link { display: inline-block; margin-top: 8px; color: #66b0ff; text-decoration: underline; }
 </style>
 
@@ -70,20 +67,47 @@
           {% with post.file.url|lower as url %}
             {% if ".gif" in url %}
               <img src="{{ post.file.url }}" class="post-gif rounded mt-2" alt="GIF">
-            {% elif ".mp4" in url or ".webm" in url or ".ogg" in url %}
-              <video controls class="mt-2">
-                <source src="{{ post.file.url }}">
+              <a href="{{ post.file.url }}" class="file-link" download>
+                <i class="bi bi-download"></i> Завантажити GIF
+              </a>
+            {% elif ".mp4" in url or ".webm" in url %}
+              <video controls preload="metadata" class="mt-2 w-100">
+                <source src="{{ post.file.url }}" type="video/mp4">
                 Ваш браузер не підтримує відео.
               </video>
-              <a href="{{ post.file.url }}" class="file-link d-block mt-1" download>📥 Завантажити відео</a>
+              <a href="{{ post.file.url }}" class="file-link d-block mt-1" download>
+                <i class="bi bi-download"></i> Завантажити відео
+              </a>
+            {% elif ".mp3" in url %}
+              <audio controls preload="none" class="mt-2 w-100">
+                <source src="{{ post.file.url }}" type="audio/mpeg">
+                Ваш браузер не підтримує аудіо.
+              </audio>
+              <a href="{{ post.file.url }}" class="file-link d-block mt-1" download>
+                <i class="bi bi-download"></i> Завантажити MP3
+              </a>
+            {% elif ".wav" in url %}
+              <audio controls preload="none" class="mt-2 w-100">
+                <source src="{{ post.file.url }}" type="audio/wav">
+                Ваш браузер не підтримує аудіо.
+              </audio>
+              <a href="{{ post.file.url }}" class="file-link d-block mt-1" download>
+                <i class="bi bi-download"></i> Завантажити WAV
+              </a>
             {% else %}
-              <a href="{{ post.file.url }}" class="file-link d-block mt-2" download>📎 Завантажити файл</a>
+              <a href="{{ post.file.url }}" class="file-link d-block mt-2" download>
+                <i class="bi bi-paperclip"></i> Завантажити файл
+              </a>
             {% endif %}
           {% endwith %}
         {% endif %}
 
         {% if post.link %}
-          <p class="mt-2"><a href="{{ post.link }}" target="_blank" class="file-link">🔗 {{ post.link }}</a></p>
+          <p class="mt-2">
+            <a href="{{ post.link }}" target="_blank" class="file-link">
+              <i class="bi bi-paperclip"></i> {{ post.link }}
+            </a>
+          </p>
         {% endif %}
 
         <div class="d-flex justify-content-between align-items-center mt-3">
