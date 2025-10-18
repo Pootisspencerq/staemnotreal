@@ -1,34 +1,105 @@
-{% extends "base.html" %}
-{% block title %}Сповіщення{% endblock %}
-{% block content %}
-<div class="container py-4">
-  <h2 class="mb-3"><i class="bi bi-bell"></i> Ваші сповіщення</h2>
+{% load static %}
+<div class="nav-item dropdown">
+  <a class="nav-link position-relative" href="#" id="notificationsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+    <i class="bi bi-bell"></i>
+    <span id="notifications-badge" class="badge rounded-pill bg-danger position-absolute"
+          style="top: 0; right: 0; display: none;"></span>
+  </a>
 
-  {% if notifications %}
-    <ul class="list-group">
-      {% for n in notifications %}
-        <li class="list-group-item d-flex justify-content-between align-items-center {% if n.unread %}bg-light{% endif %}">
-          <div>
-            {% if n.actor %}
-              <strong>{{ n.actor.username }}</strong>
-            {% else %}
-              Система
-            {% endif %}
-            {{ n.verb }}
-            {% if n.target_url %}
-              <a href="{{ n.target_url }}">Переглянути</a>
-            {% endif %}
-            <br>
-            <small class="text-muted">{{ n.created_at|date:"d.m.Y H:i" }}</small>
-          </div>
-          {% if n.unread %}
-          <a href="{% url 'notification_read' n.id %}" class="btn btn-sm btn-outline-primary">✓</a>
-          {% endif %}
-        </li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p>Немає нових сповіщень </p>
-  {% endif %}
+  <div class="dropdown-menu dropdown-menu-end p-0 shadow" aria-labelledby="notificationsDropdown"
+       style="min-width: 320px;">
+    <div id="notifications-dropdown-content" class="p-0">
+      <div class="p-3 text-center text-muted small">Loading...</div>
+    </div>
+  </div>
 </div>
-{% endblock %}
+
+<script>
+(function () {
+  // --- CSRF helper ---
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+  const csrftoken = getCookie('csrftoken');
+
+  // --- Fetch and update unread count ---
+  function updateCount() {
+    fetch('/notifications/unread-count/', {credentials: 'same-origin'})
+      .then(r => r.json())
+      .then(data => {
+        const badge = document.getElementById('notifications-badge');
+        if (!badge) return;
+        const count = data.unread || 0;
+        badge.textContent = count > 0 ? count : '';
+        badge.style.display = count > 0 ? 'inline-block' : 'none';
+      });
+  }
+
+  // --- Load dropdown content (HTML) ---
+  function loadDropdown() {
+    fetch('/notifications/dropdown/', {credentials: 'same-origin'})
+      .then(r => r.text())
+      .then(html => {
+        document.getElementById('notifications-dropdown-content').innerHTML = html;
+      });
+  }
+
+  // --- Mark notification as read ---
+  function markAsRead(id) {
+    fetch(`/notifications/mark-as-read/${id}/`, {
+      method: 'POST',
+      headers: {'X-CSRFToken': csrftoken, 'Accept': 'application/json'}
+    })
+    .then(r => r.json())
+    .then(() => {
+      updateCount();
+      loadDropdown();
+    });
+  }
+
+  // --- Mark all as read ---
+  function markAllAsRead() {
+    fetch(`/notifications/mark-as-read/all/`, {
+      method: 'POST',
+      headers: {'X-CSRFToken': csrftoken, 'Accept': 'application/json'}
+    })
+    .then(r => r.json())
+    .then(() => {
+      updateCount();
+      loadDropdown();
+    });
+  }
+
+  // --- Event bindings ---
+  document.addEventListener('click', function (e) {
+    // Single notification mark
+    if (e.target.classList.contains('mark-read-btn')) {
+      const id = e.target.dataset.id;
+      if (id) markAsRead(id);
+    }
+    // Mark all
+    if (e.target.id === 'mark-all-read-btn') {
+      markAllAsRead();
+    }
+  });
+
+  // When dropdown opens -> load latest HTML
+  document.getElementById('notificationsDropdown')
+    .addEventListener('show.bs.dropdown', loadDropdown);
+
+  // Initial unread count and periodic updates
+  updateCount();
+  setInterval(updateCount, 10000);
+})();
+</script>

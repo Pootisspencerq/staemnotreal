@@ -10,9 +10,45 @@
     {% if user.is_authenticated %}
         <p class="text-success">Ви увійшли як {{ user.username }} ✅</p>
         <a href="{% url 'accounts:logout' %}" class="btn btn-danger">Вийти</a>
+
+        <!-- Notifications dropdown -->
+        <div class="dropdown d-inline-block ms-3">
+            <button class="btn btn-primary dropdown-toggle" type="button" id="notifDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                Notifications <span id="unreadCount" class="badge bg-danger">{{ notifications|length }}</span>
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="notifDropdown" id="notifMenu">
+                {% for n in notifications %}
+                    <li class="{% if n.unread %}fw-bold{% endif %}">
+                        <a class="dropdown-item" href="{{ n.link|default:'#' }}">
+                            {{ n.verb }} - {{ n.timestamp|date:"H:i, d M Y" }}
+                        </a>
+                    </li>
+                {% empty %}
+                    <li><span class="dropdown-item">No notifications</span></li>
+                {% endfor %}
+            </ul>
+        </div>
+
     {% else %}
         <a href="{% url 'accounts:login' %}" class="btn btn-primary">Увійти</a>
         <a href="{% url 'accounts:register' %}" class="btn btn-secondary">Реєстрація</a>
     {% endif %}
 </div>
+
+<!-- Optional: AJAX script to refresh unread count -->
+{% if user.is_authenticated %}
+<script>
+function updateUnreadCount() {
+    fetch("{% url 'notifications:ajax_unread_count' %}")
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('unreadCount').textContent = data.unread_count;
+        });
+}
+
+// Refresh every 10 секунд
+setInterval(updateUnreadCount, 10000);
+</script>
+{% endif %}
+
 {% endblock %}
