@@ -1,129 +1,240 @@
-/* static/css/style.css — Dark theme + larger UI */
-:root{
+/* static/css/style.css — Dark theme + Reddit-style posts */
+/* Navbar */
+.custom-navbar {
+    background-color: #1b1b1d;
+}
+
+.navbar-logo {
+    width: 40px;
+    height: auto;
+    border-radius: 8px;
+}
+
+.navbar-title {
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: #fff;
+}
+
+.navbar .nav-link {
+    color: #fff !important;
+}
+
+.navbar .nav-link:hover {
+    color: #0d6efd !important;
+}
+
+.avatar-navbar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 8px;
+    border: 1px solid rgba(255,255,255,0.04);
+}
+
+:root {
   --bg: #0f0f10;
   --card: #1b1b1d;
   --muted: #bdbdbd;
   --text: #ffffff;
-  --accent: #0d6efd; /* bootstrap primary */
+  --accent: #0d6efd;
   --danger: #dc3545;
   --shadow: rgba(0,0,0,0.6);
   --radius: 12px;
   --big-font: 1.05rem;
+  --small-font: 0.9rem;
 }
 
-/* Base */
-html,body {
+html, body {
   background: var(--bg);
   color: var(--text);
-  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   font-size: var(--big-font);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
   line-height: 1.5;
   margin: 0;
   padding: 0;
 }
 
-/* Containers and cards */
-.container, .card {
-  background: transparent;
-}
-
-/* Card-like blocks */
-.card {
-  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-  border: 1px solid rgba(255,255,255,0.04);
-  border-radius: var(--radius);
-  box-shadow: 0 6px 18px var(--shadow);
-  color: var(--text);
-}
-
-/* Navbar */
-.navbar {
-  background: #0b0b0c;
-  border-bottom: 1px solid rgba(255,255,255,0.03);
-}
-.navbar .nav-link, .navbar .navbar-brand {
-  color: var(--text) !important;
-  font-weight: 600;
-}
-.navbar .nav-link:hover {
-  color: var(--accent) !important;
-}
-
-/* Buttons */
-.btn {
-  border-radius: 10px;
-  font-weight: 600;
-}
-.btn-primary {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
-  box-shadow: 0 6px 12px rgba(13,110,253,0.12);
-}
-.btn-outline-light {
-  border-color: rgba(255,255,255,0.08);
-  color: var(--text);
-}
-
-/* Language switcher (larger) */
-.lang-switch {
-  font-size: 1.05rem;
-  padding: .45rem .8rem;
-  border-radius: 8px;
+/* Container */
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1rem;
 }
 
 /* Post card */
 .post-card {
-  padding: 1rem;
+  display: flex;
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: 0 4px 12px var(--shadow);
   margin-bottom: 1rem;
-}
-.post-card .title {
-  font-size: 1.05rem;
-  font-weight: 700;
-}
-.post-card .meta {
-  color: var(--muted);
-  font-size: 0.9rem;
+  overflow: hidden;
+  color: var(--text);
 }
 
-/* Avatar */
-.avatar {
-  width: 56px;
-  height: 56px;
-  border-radius: 10px;
+/* Votes column */
+.post-votes {
+  width: 50px;
+  background: #1a1a1c;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0;
+}
+.post-votes button {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 1.3rem;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  margin: 0.2rem 0;
+}
+.post-votes button:hover {
+  color: var(--accent);
+}
+.post-votes .vote-count {
+  font-weight: 700;
+}
+
+/* Post content */
+.post-content {
+  flex: 1;
+  padding: 1rem;
+}
+.post-content .post-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+.post-content .avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
   object-fit: cover;
   border: 1px solid rgba(255,255,255,0.04);
 }
-
-/* Notifications badge */
-.badge-notif {
-  background: var(--danger);
-  color: #fff;
+.post-content .author {
   font-weight: 700;
-  border-radius: 10px;
-  padding: 0.18rem 0.45rem;
-  font-size: 0.75rem;
+}
+.post-content .meta {
+  color: var(--muted);
+  font-size: var(--small-font);
+}
+.post-content p {
+  margin: 0.5rem 0;
+  white-space: pre-wrap;
+}
+.post-content img,
+.post-content video,
+.post-content audio {
+  max-width: 100%;
+  height: auto;
+  margin-top: 0.5rem;
+  border-radius: 6px;
 }
 
 /* Links */
-a {
+.post-content a {
   color: var(--accent);
-  text-decoration: none;
+  text-decoration: underline;
 }
-a:hover { text-decoration: underline; }
 
-/* Forms */
-.form-control {
-  background: #111111;
+/* Post actions */
+.post-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.75rem;
+  font-size: var(--small-font);
+}
+.post-actions button {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.post-actions button:hover {
+  color: var(--accent);
+}
+
+/* Comments */
+.comments-block {
+  margin-top: 0.75rem;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  padding-top: 0.5rem;
+}
+.comment {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+.comment .avatar-comment {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(255,255,255,0.04);
+}
+.comment .comment-text {
+  flex: 1;
+  font-size: var(--small-font);
+  word-wrap: break-word;
+}
+.comment .delete-comment {
+  color: var(--danger);
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+/* Comment form */
+.comment-form {
+  margin-top: 0.5rem;
+  display: flex;
+  gap: 0.5rem;
+}
+.comment-form input {
+  flex: 1;
+  padding: 0.5rem;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.05);
+  background: #111;
   color: var(--text);
-  border: 1px solid rgba(255,255,255,0.03);
-  border-radius: 8px;
+}
+.comment-form button {
+  padding: 0.5rem 0.8rem;
+  border-radius: 6px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+.comment-form button:hover {
+  background: #0b5ed7;
 }
 
-/* Responsive adjustments */
+/* Responsive */
 @media (max-width: 768px) {
-  .avatar { width: 48px; height: 48px; }
-  :root{ --big-font: 1rem; }
+  .post-card {
+    flex-direction: column;
+  }
+  .post-votes {
+    flex-direction: row;
+    width: 100%;
+    justify-content: flex-start;
+    padding: 0.5rem;
+  }
+  .post-votes button {
+    font-size: 1.2rem;
+    margin-right: 0.5rem;
+  }
 }

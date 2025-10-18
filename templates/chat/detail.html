@@ -7,18 +7,49 @@
     <h2 class="mb-3"><i class="bi bi-chat-dots"></i> {{ chat.name }}</h2>
 
     <!-- Чат-бокс -->
-    <div id="chat-box" class="border rounded p-3 mb-3" style="height: 400px; overflow-y: auto; background: #1c1c1c;">
+    <div id="chat-box" class="border rounded p-3 mb-3" 
+         style="height: 400px; overflow-y: auto; background: #1c1c1c;">
         {% if chat.messages.exists %}
             {% for msg in chat.messages.all %}
-                <div class="mb-2">
+                <div class="mb-3 p-2 rounded" style="background: rgba(255,255,255,0.05);">
                     <strong class="text-info">{{ msg.author.username }}</strong>:
-                    <span class="text-light">{{ msg.text }}</span>
-                    {% if msg.image %}
-                        <div>
-                            <img src="{{ msg.image.url }}" alt="Фото" class="img-fluid rounded mt-1" style="max-height:200px;">
-                        </div>
+                    {% if msg.text %}
+                        <span class="text-light">{{ msg.text|linebreaksbr }}</span>
                     {% endif %}
-                    <div class="text-muted small">{{ msg.created_at|date:"d.m.Y H:i" }}</div>
+
+                    {% if msg.image %}
+                        {% with url=msg.image.url|lower %}
+                            {% if ".png" in url or ".jpg" in url or ".jpeg" in url or ".gif" in url %}
+                                <div class="mt-2">
+                                    <img src="{{ msg.image.url }}" alt="Фото" 
+                                         class="img-fluid rounded" style="max-height:250px;">
+                                </div>
+                            {% elif ".mp4" in url or ".webm" in url or ".ogg" in url %}
+                                <div class="mt-2">
+                                    <video controls class="w-100 rounded" preload="metadata">
+                                        <source src="{{ msg.image.url }}">
+                                        Ваш браузер не підтримує відео.
+                                    </video>
+                                </div>
+                            {% elif ".mp3" in url or ".wav" in url %}
+                                <div class="mt-2">
+                                    <audio controls class="w-100">
+                                        <source src="{{ msg.image.url }}">
+                                        Ваш браузер не підтримує аудіо.
+                                    </audio>
+                                </div>
+                            {% else %}
+                                <div class="mt-2">
+                                    <a href="{{ msg.image.url }}" target="_blank" 
+                                       class="text-info text-decoration-none">
+                                        <i class="bi bi-file-earmark-text"></i> {{ msg.image.name|slice:"-30:" }}
+                                    </a>
+                                </div>
+                            {% endif %}
+                        {% endwith %}
+                    {% endif %}
+
+                    <div class="text-muted small mt-1">{{ msg.created_at|date:"d.m.Y H:i" }}</div>
                 </div>
             {% endfor %}
         {% else %}
@@ -29,15 +60,17 @@
         {% endif %}
     </div>
 
-    <!-- Форма для відправки повідомлення + фото -->
-    <form id="chat-form" method="POST" enctype="multipart/form-data" action="{% url 'chat:messages_api' chat.id %}">
+    <!-- Форма для надсилання -->
+    <form id="chat-form" method="POST" enctype="multipart/form-data" 
+          action="{% url 'chat:messages_api' chat.id %}">
         {% csrf_token %}
-        <input type="text" name="message" class="form-control mb-2" placeholder="Напишіть повідомлення..." required>
-        <input type="file" name="image" class="form-control mb-2" accept="image/*">
+        <input type="text" name="message" class="form-control mb-2" 
+               placeholder="Напишіть повідомлення..." required>
+        <input type="file" name="image" class="form-control mb-2" 
+               accept="image/*,audio/*,video/*,.pdf,.doc,.docx,.txt">
         <button type="submit" class="btn btn-primary">Відправити</button>
     </form>
 
-    <!-- Кнопка назад до списку чатів -->
     <a href="{% url 'chat:inbox' %}" class="btn btn-outline-light btn-sm mt-3">
         <i class="bi bi-arrow-left"></i> Назад до чатів
     </a>
@@ -47,7 +80,6 @@
 const chatBox = document.getElementById('chat-box');
 const form = document.getElementById('chat-form');
 
-// Автопрокрутка до останніх повідомлень
 chatBox.scrollTop = chatBox.scrollHeight;
 
 form.addEventListener('submit', async (e) => {
@@ -57,14 +89,33 @@ form.addEventListener('submit', async (e) => {
         method: 'POST',
         body: formData
     });
-    if(response.ok){
+
+    if (response.ok) {
         const data = await response.json();
         let msgDiv = document.createElement('div');
-        msgDiv.classList.add('mb-2');
-        msgDiv.innerHTML = `<strong class="text-info">${data.author_username}</strong>: 
-                            <span class="text-light">${data.message}</span>
-                            ${data.image_url ? `<div><img src="${data.image_url}" class="img-fluid rounded mt-1" style="max-height:200px;"></div>` : ''}
-                            <div class="text-muted small">${new Date(data.created_at).toLocaleString()}</div>`;
+        msgDiv.classList.add('mb-3', 'p-2', 'rounded');
+        msgDiv.style.background = 'rgba(255,255,255,0.05)';
+
+        let fileHTML = '';
+        if (data.image_url) {
+            const url = data.image_url.toLowerCase();
+            if (url.endsWith('.png') || url.endsWith('.jpg') || url.endsWith('.jpeg') || url.endsWith('.gif')) {
+                fileHTML = `<div class="mt-2"><img src="${data.image_url}" class="img-fluid rounded" style="max-height:250px;"></div>`;
+            } else if (url.endsWith('.mp4') || url.endsWith('.webm') || url.endsWith('.ogg')) {
+                fileHTML = `<div class="mt-2"><video controls class="w-100 rounded"><source src="${data.image_url}"></video></div>`;
+            } else if (url.endsWith('.mp3') || url.endsWith('.wav')) {
+                fileHTML = `<div class="mt-2"><audio controls class="w-100"><source src="${data.image_url}"></audio></div>`;
+            } else {
+                fileHTML = `<div class="mt-2"><a href="${data.image_url}" target="_blank" class="text-info"><i class="bi bi-file-earmark-text"></i> ${data.image_name}</a></div>`;
+            }
+        }
+
+        msgDiv.innerHTML = `
+            <strong class="text-info">${data.author_username}</strong>: 
+            <span class="text-light">${data.message || ''}</span>
+            ${fileHTML}
+            <div class="text-muted small mt-1">${new Date(data.created_at).toLocaleString()}</div>
+        `;
         chatBox.appendChild(msgDiv);
         chatBox.scrollTop = chatBox.scrollHeight;
         form.reset();

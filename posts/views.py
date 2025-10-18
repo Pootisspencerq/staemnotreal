@@ -2,10 +2,11 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
 from django.http import JsonResponse
-from .models import Post, Like, Comment, Repost
+from .models import Post, Like, Comment, Repost, Vote
 from django.contrib import messages
 from django.views.decorators.http import require_POST
-
+from django.db import models
+from django.db.models import Sum
 User = get_user_model()
 
 
@@ -155,3 +156,26 @@ def repost_post(request, post_id):
     else:
         messages.info(request, "Ви вже репостили цей пост.")
     return redirect("posts:feed")
+
+@login_required
+def vote_post(request, post_id, action):
+    if request.method != "POST":
+        return JsonResponse({'error': 'Invalid request'}, status=400)
+
+    post = get_object_or_404(Post, id=post_id)
+    vote_value = 1 if action == 'up' else -1
+
+    # Create or update vote
+    vote, created = Vote.objects.update_or_create(
+        user=request.user,
+        post=post,
+        defaults={'vote_value': vote_value}
+    )
+
+    # Total score
+    score = post.votes.aggregate(total=Sum('vote_value'))['total'] or 0
+
+    return JsonResponse({'score': score})
+def post_detail(request, post_id):
+    post = get_object_or_404(Post, id=post_id)
+    return render(request, "posts/post_detail.html", {"post": post})

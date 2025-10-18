@@ -1,34 +1,11 @@
 {% extends "base.html" %}
 {% load static %}
+{% load static humanize %}
 
 {% block title %}Стрічка новин{% endblock %}
 
 {% block content %}
-<style>
-  .card-body, .card-body p, .card-body span, .card-body a { color: #f5f5f5 !important; }
-  body { background-color: #121212; color: #f5f5f5; }
-  .card { background-color: #1e1e1e; border: 1px solid #333; }
-  textarea, input[type="file"], input[type="text"], input[type="url"] {
-    background-color: #222; color: #fff; border: 1px solid #444;
-  }
-  textarea::placeholder, input::placeholder { color: #bbb; }
-  .btn-primary { background-color: #007bff; border: none; }
-  .btn-primary:hover { background-color: #0069d9; }
-  .btn-outline-primary { color: #66b0ff; border-color: #66b0ff; }
-  .btn-outline-primary:hover { background-color: #007bff; color: #fff; }
-  .btn-danger { background-color: #dc3545; border: none; }
-  .btn-danger:hover { background-color: #c82333; }
-  .text-muted { color: #aaa !important; }
-  hr { border-top: 1px solid #333; }
-  .comment-input { background-color: #1c1c1c; border: 1px solid #333; color: #fff; }
-  .input-group .btn { border-color: #333; }
-  img.rounded { border: 1px solid #333; }
-  .avatar-post { width: 40px; height: 40px; object-fit: cover; border-radius: 50%; }
-  .avatar-comment { width: 30px; height: 30px; object-fit: cover; border-radius: 50%; }
-  .like-btn:hover { filter: brightness(1.2); }
-  video, .post-gif, audio { max-width: 100%; height: auto; margin-top: 10px; }
-  .file-link { display: inline-block; margin-top: 8px; color: #66b0ff; text-decoration: underline; }
-</style>
+
 
 <div class="container py-4">
   <h2 class="mb-4 text-light"><i class="bi bi-newspaper"></i> Стрічка новин</h2>
@@ -41,181 +18,162 @@
     <button class="btn btn-primary w-100"><i class="bi bi-send-fill"></i> Опублікувати</button>
   </form>
 
-  <hr class="my-4">
-
   {% for post in posts %}
-    <div class="card mb-4">
-      <div class="card-body">
-        <div class="d-flex align-items-center mb-2">
-          {% if post.author.profile.avatar %}
-            <img src="{{ post.author.profile.avatar.url }}" alt="avatar" class="avatar-post me-2">
-          {% else %}
-            <img src="{% static 'images/default-avatar.png' %}" alt="avatar" class="avatar-post me-2">
-          {% endif %}
-          <strong>{{ post.author.username }}</strong>
-        </div>
+  <div class="post-card">
+    <div class="post-votes">
+      <button class="vote-btn" data-post="{{ post.id }}" data-action="up">&#9650;</button>
+      <div class="vote-count" id="score-{{ post.id }}">{{ post.votes.aggregate_sum_value|default:0 }}</div>
+      <button class="vote-btn" data-post="{{ post.id }}" data-action="down">&#9660;</button>
+    </div>
 
-        {% if post.text %}
-          <p>{{ post.text|linebreaksbr }}</p>
+    <div class="post-content">
+      <div class="post-header">
+        {% if post.author.profile.avatar %}
+            <img src="{{ post.author.profile.avatar.url }}" class="avatar-post" alt="avatar">
+        {% else %}
+            <img src="{% static 'images/default-avatar.png' %}" class="avatar-post" alt="avatar">
         {% endif %}
 
-        {% if post.img %}
-          <img src="{{ post.img.url }}" alt="image" class="img-fluid rounded mt-2">
-        {% endif %}
-
-        {% if post.file %}
-          {% with post.file.url|lower as url %}
-            {% if ".gif" in url %}
-              <img src="{{ post.file.url }}" class="post-gif rounded mt-2" alt="GIF">
-              <a href="{{ post.file.url }}" class="file-link" download>
-                <i class="bi bi-download"></i> Завантажити GIF
-              </a>
-            {% elif ".mp4" in url or ".webm" in url %}
-              <video controls preload="metadata" class="mt-2 w-100">
-                <source src="{{ post.file.url }}" type="video/mp4">
-                Ваш браузер не підтримує відео.
-              </video>
-              <a href="{{ post.file.url }}" class="file-link d-block mt-1" download>
-                <i class="bi bi-download"></i> Завантажити відео
-              </a>
-            {% elif ".mp3" in url %}
-              <audio controls preload="none" class="mt-2 w-100">
-                <source src="{{ post.file.url }}" type="audio/mpeg">
-                Ваш браузер не підтримує аудіо.
-              </audio>
-              <a href="{{ post.file.url }}" class="file-link d-block mt-1" download>
-                <i class="bi bi-download"></i> Завантажити MP3
-              </a>
-            {% elif ".wav" in url %}
-              <audio controls preload="none" class="mt-2 w-100">
-                <source src="{{ post.file.url }}" type="audio/wav">
-                Ваш браузер не підтримує аудіо.
-              </audio>
-              <a href="{{ post.file.url }}" class="file-link d-block mt-1" download>
-                <i class="bi bi-download"></i> Завантажити WAV
-              </a>
-            {% else %}
-              <a href="{{ post.file.url }}" class="file-link d-block mt-2" download>
-                <i class="bi bi-paperclip"></i> Завантажити файл
-              </a>
-            {% endif %}
-          {% endwith %}
-        {% endif %}
-
-        {% if post.link %}
-          <p class="mt-2">
-            <a href="{{ post.link }}" target="_blank" class="file-link">
-              <i class="bi bi-paperclip"></i> {{ post.link }}
-            </a>
-          </p>
-        {% endif %}
-
-        <div class="d-flex justify-content-between align-items-center mt-3">
-          <button type="button" class="btn {% if post.liked_by_user %}btn-danger{% else %}btn-outline-danger{% endif %} like-btn" data-post="{{ post.id }}">
-            <i class="bi bi-heart-fill"></i> <span class="like-count">{{ post.like_count }}</span>
-          </button>
-          <span class="text-muted"><i class="bi bi-chat-dots"></i> <span class="comment-count">{{ post.comment_count }}</span></span>
-        </div>
-
-        <hr>
-        <div class="comments-block">
-          {% for comment in post.comments.all %}
-            <div class="d-flex justify-content-between align-items-start mb-2">
-              <p class="mb-1 flex-grow-1 d-flex align-items-center">
-                {% if comment.author.profile.avatar %}
-                  <img src="{{ comment.author.profile.avatar.url }}" alt="avatar" class="avatar-comment me-1">
-                {% else %}
-                  <img src="{% static 'images/default-avatar.png' %}" alt="avatar" class="avatar-comment me-1">
-                {% endif %}
-                <b>{{ comment.author.username }}</b>: {{ comment.text }}
-              </p>
-              {% if user == comment.author or user.is_staff %}
-                <a href="{% url 'posts:delete_comment' comment.id %}" class="btn btn-link btn-sm text-danger p-0">
-                  <i class="bi bi-x-circle"></i>
-                </a>
-              {% endif %}
-            </div>
-          {% empty %}
-            <p class="no-comments text-muted mb-1">Ще немає коментарів</p>
-          {% endfor %}
-
-          <form class="comment-form mt-2" data-post="{{ post.id }}">
-            {% csrf_token %}
-            <div class="input-group">
-              <input type="text" name="text" class="form-control comment-input" placeholder="Напишіть коментар...">
-              <button class="btn btn-outline-primary" type="submit"><i class="bi bi-send"></i></button>
-            </div>
-          </form>
+        <div>
+          <div class="author">{{ post.author.username }}</div>
+          <div class="meta">{{ post.created_at|naturaltime }}</div>
         </div>
       </div>
+
+      {% if post.text %}<p>{{ post.text|linebreaksbr }}</p>{% endif %}
+      {% if post.img %}<img src="{{ post.img.url }}" alt="image">{% endif %}
+
+      {% if post.file %}
+        {% with post.file.url|lower as url %}
+          {% if ".gif" in url %}<img src="{{ post.file.url }}" alt="GIF">{% elif ".mp4" in url or ".webm" in url %}<video controls><source src="{{ post.file.url }}"></video>{% elif ".mp3" in url or ".wav" in url %}<audio controls><source src="{{ post.file.url }}"></audio>{% endif %}
+        {% endwith %}
+      {% endif %}
+
+      {% if post.link %}<p><a href="{{ post.link }}" target="_blank">{{ post.link }}</a></p>{% endif %}
+
+      <div class="post-actions">
+        <button class="like-btn" data-post="{{ post.id }}">&#10084; <span class="like-count">{{ post.like_count }}</span></button>
+        <span>{{ post.comment_count }} коментарів</span>
+        <div>
+          {% if user == post.author %}
+          <button class="delete-post-btn" data-post="{{ post.id }}"><i class="bi bi-trash"></i></button>
+          {% endif %}
+          <button class="repost-btn" data-post="{{ post.id }}"><i class="bi bi-share"></i></button>
+        </div>
+      </div>
+
+      <div class="comments-block">
+        {% for comment in post.comments.all %}
+        <div class="comment">
+          {% if comment.author.profile.avatar %}
+              <img src="{{ comment.author.profile.avatar.url }}" class="avatar-comment" alt="avatar">
+          {% else %}
+              <img src="{% static 'images/default-avatar.png' %}" class="avatar-comment" alt="avatar">
+          {% endif %}
+
+          <div class="comment-text"><b>{{ comment.author.username }}</b>: {{ comment.text }}</div>
+          {% if user == comment.author or user.is_staff %}
+          <a href="#" class="delete-comment-btn" data-comment="{{ comment.id }}">&#10006;</a>
+          {% endif %}
+        </div>
+        {% empty %}
+        <p class="no-comments text-muted">Ще немає коментарів</p>
+        {% endfor %}
+
+        <form class="comment-form" data-post="{{ post.id }}">
+          {% csrf_token %}
+          <input type="text" name="text" placeholder="Напишіть коментар...">
+          <button type="submit">&#10148;</button>
+        </form>
+      </div>
     </div>
+  </div>
   {% empty %}
-    <p class="text-center text-muted"><i class="bi bi-hourglass-split"></i> Ще немає постів</p>
+  <p class="text-center text-muted">Ще немає постів</p>
   {% endfor %}
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+  const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+  // Comments
   document.querySelectorAll('.comment-form').forEach(form => {
     form.addEventListener('submit', async e => {
       e.preventDefault();
       const input = form.querySelector('input[name="text"]');
       const text = input.value.trim();
       if (!text) return;
-
       const postId = form.dataset.post;
-      const csrfToken = form.querySelector('[name=csrfmiddlewaretoken]').value;
-
-      const response = await fetch(`/posts/${postId}/comment/`, {
-        method: 'POST',
-        headers: { 'X-CSRFToken': csrfToken, 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ text })
+      const res = await fetch(`/posts/${postId}/comment/`, {
+        method: 'POST', headers: { 'X-CSRFToken': csrfToken, 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ text })
       });
-
-      if (response.ok) {
-        const data = await response.json();
+      if (res.ok) {
+        const data = await res.json();
         const commentsBlock = form.closest('.comments-block');
-        const noComments = commentsBlock.querySelector('.no-comments');
-        if (noComments) noComments.remove();
-
-        const avatarUrl = data.avatar_url || "{% static 'images/default-avatar.png' %}";
+        commentsBlock.querySelector('.no-comments')?.remove();
         const newComment = document.createElement('div');
-        newComment.className = 'd-flex justify-content-between align-items-start mb-2';
-        newComment.innerHTML = `
-          <p class="mb-1 flex-grow-1 d-flex align-items-center">
-            <img src="${avatarUrl}" alt="avatar" class="avatar-comment me-1">
-            <b>${data.author}</b>: ${data.text}
-          </p>
-          <a href="/posts/comment/${data.comment_id}/delete/" class="btn btn-link btn-sm text-danger p-0">
-            <i class="bi bi-x-circle"></i>
-          </a>
-        `;
+        newComment.className = 'comment';
+        newComment.innerHTML = `<img src="${data.avatar_url}" class="avatar-comment" alt="avatar"><div class="comment-text"><b>${data.author}</b>: ${data.text}</div><a href="#" class="delete-comment-btn" data-comment="${data.comment_id}">&#10006;</a>`;
         commentsBlock.insertBefore(newComment, form);
         input.value = '';
-
-        const postCard = form.closest('.card-body');
-        const commentCountEl = postCard.querySelector('.comment-count');
-        if (commentCountEl) commentCountEl.textContent = data.comment_count;
+        form.closest('.post-content').querySelector('.post-actions span').textContent = `${data.comment_count} коментарів`;
       }
     });
   });
 
+  // Like
   document.querySelectorAll('.like-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
       const postId = btn.dataset.post;
-      const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-      const response = await fetch(`/posts/${postId}/like/`, {
-        method: 'POST',
-        headers: { 'X-CSRFToken': csrfToken }
-      });
-      if (response.ok) {
-        const data = await response.json();
+      const res = await fetch(`/posts/${postId}/like/`, { method: 'POST', headers: { 'X-CSRFToken': csrfToken } });
+      if (res.ok) {
+        const data = await res.json();
         btn.querySelector('.like-count').textContent = data.like_count;
-        btn.classList.toggle('btn-danger', data.liked);
-        btn.classList.toggle('btn-outline-danger', !data.liked);
       }
     });
+  });
+
+  // Vote
+  document.querySelectorAll('.vote-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const postId = btn.dataset.post, action = btn.dataset.action;
+      const res = await fetch(`/posts/${postId}/vote/${action}/`, { method: 'POST', headers: { 'X-CSRFToken': csrfToken } });
+      if (res.ok) {
+        const data = await res.json();
+        document.getElementById(`score-${postId}`).textContent = data.score;
+      }
+    });
+  });
+
+  // Repost
+  document.querySelectorAll('.repost-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const postId = btn.dataset.post;
+      const res = await fetch(`/posts/${postId}/repost/`, { method: 'POST', headers: { 'X-CSRFToken': csrfToken } });
+      if (res.ok) alert('Репост успішний!');
+    });
+  });
+
+  // Delete post
+  document.querySelectorAll('.delete-post-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm('Ви впевнені?')) return;
+      const postId = btn.dataset.post;
+      const res = await fetch(`/posts/${postId}/delete/`, { method: 'POST', headers: { 'X-CSRFToken': csrfToken } });
+      if (res.ok) btn.closest('.post-card').remove();
+    });
+  });
+
+  // Delete comment
+  document.addEventListener('click', async e => {
+    if (!e.target.closest('.delete-comment-btn')) return;
+    e.preventDefault();
+    if (!confirm('Ви впевнені?')) return;
+    const btn = e.target.closest('.delete-comment-btn');
+    const commentId = btn.dataset.comment;
+    const res = await fetch(`/posts/comment/${commentId}/delete/`, { method: 'POST', headers: { 'X-CSRFToken': csrfToken } });
+    if (res.ok) btn.closest('.comment').remove();
   });
 });
 </script>

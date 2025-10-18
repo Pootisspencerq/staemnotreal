@@ -1,70 +1,94 @@
 {% extends "base.html" %}
+{% load static %}  {# <-- Must load static for {% static %} #}
 
 {% block content %}
 <style>
+  /* General dark theme adjustments */
   body { background-color: #121212; color: #f5f5f5; }
   .card { background-color: #1e1e1e; border: 1px solid #333; }
-  textarea, input[type="file"], input[type="text"] { background-color: #222; color: #fff; border: 1px solid #444; }
+  textarea, input[type="file"], input[type="text"] {
+      background-color: #222; color: #fff; border: 1px solid #444;
+  }
   textarea::placeholder, input::placeholder { color: #bbb; }
+
+  /* Buttons */
   .btn-primary { background-color: #007bff; border: none; }
   .btn-primary:hover { background-color: #0069d9; }
   .btn-outline-primary { color: #66b0ff; border-color: #66b0ff; }
   .btn-outline-primary:hover { background-color: #007bff; color: #fff; }
   .btn-danger { background-color: #dc3545; border: none; }
   .btn-danger:hover { background-color: #c82333; }
+
+  /* Text & misc */
   .text-muted { color: #aaa !important; }
   hr { border-top: 1px solid #333; }
   .comment-input { background-color: #1c1c1c; border: 1px solid #333; color: #fff; }
   .input-group .btn { border-color: #333; }
-  img.rounded { border: 1px solid #333; }
+
+  /* Images */
+  img.rounded, .img-thumbnail { border: 1px solid #333; }
   .avatar-post { width: 40px; height: 40px; object-fit: cover; border-radius: 50%; }
   .avatar-comment { width: 30px; height: 30px; object-fit: cover; border-radius: 50%; }
+
+  /* Interactions */
   .like-btn:hover { filter: brightness(1.2); }
+  .nav-pills .nav-link.active { background-color: #007bff; color: #fff; }
 </style>
+
 <div class="container mt-5">
-    <h2>Профіль користувача {{ profile_user.username }}</h2>
-    {% if profile.avatar %}
-        <img src="{{ profile.avatar.url }}" alt="Аватар" class="img-thumbnail" width="150">
-    {% endif %}
-    <p><strong>Про себе:</strong> {{ profile.bio }}</p>
-    {% if profile.favorite_color %}
-        <p><strong>Улюблений колір:</strong> 
-            <span style="color: {{ profile.favorite_color }}">
-                {{ profile.favorite_color }}
-            </span>
-        </p>
-    {% endif %}
+    <div class="d-flex align-items-center mb-4 gap-3">
+        {% if profile.avatar %}
+            <img src="{{ profile.avatar.url }}" alt="Аватар" class="img-thumbnail" width="150">
+        {% else %}
+            <img src="{% static 'images/default-avatar.png' %}" alt="Аватар" class="img-thumbnail" width="150">
+        {% endif %}
+        <div>
+            <h2>{{ profile_user.username }}</h2>
+            {% if profile.bio %}
+                <p><strong>Про себе:</strong> {{ profile.bio }}</p>
+            {% endif %}
+            {% if profile.favorite_color %}
+                <p><strong>Улюблений колір:</strong> 
+                    <span style="color: {{ profile.favorite_color }}">{{ profile.favorite_color }}</span>
+                </p>
+            {% endif %}
 
-    {% if profile_user == user %}
-        <a href="{% url 'accounts:edit_profile' %}" class="btn btn-secondary mt-3">Редагувати профіль</a>
-    {% endif %}
-    
-    <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
-  <li class="nav-item" role="presentation">
-    <button class="nav-link active" id="pills-home-tab" data-bs-toggle="pill" data-bs-target="#pills-home" type="button" role="tab" aria-controls="pills-home" aria-selected="true">Пости</button>
-  </li>
-  <li class="nav-item" role="presentation">
-    <button class="nav-link" id="pills-profile-tab" data-bs-toggle="pill" data-bs-target="#pills-profile" type="button" role="tab" aria-controls="pills-profile" aria-selected="false">Репости</button>
-  </li>
-</ul>
-<div class="tab-content" id="pills-tabContent">
-    
-  <div class="tab-pane fade show active" id="pills-home" role="tabpanel" aria-labelledby="pills-home-tab" tabindex="0">
-    {% for post in profile_user.posts.all %}
-    {% include "posts/post_card.html" with post=post %}
-  {% empty %}
-    <p class="text-center text-muted"><i class="bi bi-hourglass-split"></i> Ще немає постів</p>
-  {% endfor %}
-</div>
-  <div class="tab-pane fade" id="pills-profile" role="tabpanel" aria-labelledby="pills-profile-tab" tabindex="0">
-    {% for repost in profile_user.reposts.all %}
-    {% include "posts/post_card.html" with post=repost.original_post %}
-  {% empty %}
-    <p class="text-center text-muted"><i class="bi bi-hourglass-split"></i> Ще немає репостів</p>
-  {% endfor %}
+            {% if profile_user == user %}
+                <a href="{% url 'accounts:edit_profile' %}" class="btn btn-secondary mt-2">Редагувати профіль</a>
+            {% endif %}
+        </div>
+    </div>
 
-  </div>
-</div>
+    <!-- Tabs for Posts & Reposts -->
+    <ul class="nav nav-pills mb-3" id="profileTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="posts-tab" data-bs-toggle="pill" data-bs-target="#posts" type="button" role="tab" aria-controls="posts" aria-selected="true">
+                Пости
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="reposts-tab" data-bs-toggle="pill" data-bs-target="#reposts" type="button" role="tab" aria-controls="reposts" aria-selected="false">
+                Репости
+            </button>
+        </li>
+    </ul>
 
+    <div class="tab-content" id="profileTabContent">
+        <div class="tab-pane fade show active" id="posts" role="tabpanel" aria-labelledby="posts-tab">
+            {% for post in profile_user.posts.all %}
+                {% include "posts/post_card.html" with post=post %}
+            {% empty %}
+                <p class="text-center text-muted"><i class="bi bi-hourglass-split"></i> Ще немає постів</p>
+            {% endfor %}
+        </div>
+
+        <div class="tab-pane fade" id="reposts" role="tabpanel" aria-labelledby="reposts-tab">
+            {% for repost in profile_user.reposts.all %}
+                {% include "posts/post_card.html" with post=repost.original_post %}
+            {% empty %}
+                <p class="text-center text-muted"><i class="bi bi-hourglass-split"></i> Ще немає репостів</p>
+            {% endfor %}
+        </div>
+    </div>
 </div>
 {% endblock %}

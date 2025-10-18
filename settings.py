@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     'notifications',
     'accounts',
     'posts',
+    'django.contrib.humanize',
 ]
 
 # --- Middleware ---

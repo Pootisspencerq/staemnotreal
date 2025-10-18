@@ -1,21 +1,23 @@
 <ul class="list-group list-group-flush">
   {% if unread_notifications %}
     {% for n in unread_notifications %}
-      <li class="list-group-item d-flex align-items-start">
+      <li class="list-group-item d-flex align-items-start justify-content-between">
         <div class="flex-fill">
           {% if n.actor %}
             <strong>{{ n.actor.username }}</strong>:
           {% endif %}
-          <a href="{{ n.get_absolute_url }}" class="stretched-link text-decoration-none">
+          <a href="{{ n.get_absolute_url }}" class="text-decoration-none stretched-link">
             {{ n.description|default:n.verb }}
           </a>
           <div class="small text-muted">{{ n.timestamp|timesince }} ago</div>
         </div>
-        <button type="button" class="btn btn-sm btn-light ms-2 mark-read-btn" data-id="{{ n.pk }}">✓</button>
+        <button type="button" class="btn btn-sm btn-outline-secondary ms-2 mark-read-btn" data-id="{{ n.pk }}" aria-label="Mark as read">
+          ✓
+        </button>
       </li>
     {% endfor %}
     <li class="list-group-item text-center small">
-      <a href="{% url 'notifications:list' %}">View all</a> |
+      <a href="{% url 'notifications:list' %}" class="me-2">View all</a>
       <button id="mark-all-read-btn" class="btn btn-link btn-sm p-0">Mark all as read</button>
     </li>
   {% else %}
