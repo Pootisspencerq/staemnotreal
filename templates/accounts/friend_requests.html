@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h2>📨 Заявки в друзі</h2>
+
+  <h4>Вхідні</h4>
+  {% for req in incoming %}
+    <div class="card my-2 p-2">
+      {{ req.from_user.username }}
+      <a href="{% url 'accounts:accept_friend_request' req.id %}" class="btn btn-success btn-sm">Прийняти</a>
+      <a href="{% url 'accounts:decline_friend_request' req.id %}" class="btn btn-danger btn-sm">Відхилити</a>
+    </div>
+  {% empty %}
+    <p>Немає нових заявок.</p>
+  {% endfor %}
+
+  <h4 class="mt-4">Вихідні</h4>
+  {% for req in outgoing %}
+    <div class="card my-2 p-2">
+      {{ req.to_user.username }}
+      <a href="{% url 'accounts:cancel_friend_request' req.id %}" class="btn btn-warning btn-sm">Скасувати</a>
+    </div>
+  {% empty %}
+    <p>Ви не надсилали заявок.</p>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -35,6 +35,8 @@
           <li class="nav-item"><a class="nav-link" href="{% url 'posts:feed' %}"><i class="bi bi-newspaper"></i> Стрічка</a></li>
           <li class="nav-item"><a class="nav-link" href="{% url 'chat:inbox' %}"><i class="bi bi-chat-dots"></i> Чати</a></li>
           <li class="nav-item"><a class="nav-link" href="{% url 'groups:list' %}"><i class="bi bi-people"></i> Групи</a></li>
+          <li class="nav-item"><a href="{% url 'accounts:friends_list' %}" class="nav-link">Друзі</a></li>
+          <li class="nav-item"><a href="{% url 'accounts:friend_requests_list' %}" class="nav-link">Заявки</a></li>
           {% include "notifications/notifications_dropdown.html" %}
 
           <li class="nav-item dropdown">

@@ -29,23 +29,20 @@
 
                                 {% if last_message.file %}
                                     {% with last_message.file.url|lower as url %}
-                                        {% if url.endswith:".png" or url.endswith:".jpg" or url.endswith:".jpeg" or url.endswith:".gif" %}
+                                        {% if ".png" in url or ".jpg" in url or ".jpeg" in url or ".gif" in url %}
                                             <img src="{{ last_message.file.url }}" class="img-fluid rounded mt-2" alt="image">
-                                        {% elif url.endswith:".mp4" or url.endswith:".webm" or url.endswith:".ogg" %}
+                                        {% elif ".mp4" in url or ".webm" in url or ".ogg" in url %}
                                             <video controls class="w-100 rounded mt-2" preload="metadata">
                                                 <source src="{{ last_message.file.url }}" type="video/{{ url|slice:"-3" }}">
                                                 Ваш браузер не підтримує відео.
                                             </video>
-                                        {% elif url.endswith:".mp3" or url.endswith:".wav" or url.endswith:".ogg" %}
+                                        {% elif ".mp3" in url or ".wav" in url or ".ogg" in url %}
                                             <audio controls class="w-100 mt-2">
                                                 <source src="{{ last_message.file.url }}" type="audio/{{ url|slice:"-3" }}">
                                                 Ваш браузер не підтримує аудіо.
                                             </audio>
-                                        {% else %}
-                                            <a href="{{ last_message.file.url }}" target="_blank" class="d-block mt-2 text-info text-decoration-none">
-                                                <i class="bi bi-file-earmark-text"></i> {{ last_message.file.name|slice:"-30:" }}
-                                            </a>
                                         {% endif %}
+
                                     {% endwith %}
                                 {% endif %}
                             </div>

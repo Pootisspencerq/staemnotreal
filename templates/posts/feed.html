@@ -6,6 +6,25 @@
 
 {% block content %}
 
+<style>
+audio {
+  background-color: #1e1e1e;
+  border-radius: 8px;
+  width: 100%;
+  margin-top: 8px;
+  min-height: 40px;
+}
+video {
+  border-radius: 8px;
+  width: 100%;
+  margin-top: 8px;
+}
+img {
+  border-radius: 8px;
+  max-width: 100%;
+  margin-top: 8px;
+}
+</style>
 
 <div class="container py-4">
   <h2 class="mb-4 text-light"><i class="bi bi-newspaper"></i> Стрічка новин</h2>
@@ -40,16 +59,43 @@
         </div>
       </div>
 
-      {% if post.text %}<p>{{ post.text|linebreaksbr }}</p>{% endif %}
-      {% if post.img %}<img src="{{ post.img.url }}" alt="image">{% endif %}
+      {% if post.text %}
+        <p>{{ post.text|linebreaksbr }}</p>
+      {% endif %}
+
+      {% if post.img %}
+        <img src="{{ post.img.url }}" alt="image">
+      {% endif %}
 
       {% if post.file %}
         {% with post.file.url|lower as url %}
-          {% if ".gif" in url %}<img src="{{ post.file.url }}" alt="GIF">{% elif ".mp4" in url or ".webm" in url %}<video controls><source src="{{ post.file.url }}"></video>{% elif ".mp3" in url or ".wav" in url %}<audio controls><source src="{{ post.file.url }}"></audio>{% endif %}
+          {% if ".gif" in url or ".jpg" in url or ".jpeg" in url or ".png" in url %}
+            <img src="{{ post.file.url }}" alt="image">
+          {% elif ".mp4" in url or ".webm" in url %}
+            <video controls preload="metadata">
+              <source src="{{ post.file.url }}">
+              Ваш браузер не підтримує відео.
+            </video>
+          {% elif ".mp3" in url or ".wav" in url or ".ogg" in url %}
+            <audio controls preload="metadata" class="w-100 mt-2">
+              {% if ".mp3" in url %}
+                <source src="{{ post.file.url }}" type="audio/mpeg">
+              {% elif ".wav" in url %}
+                <source src="{{ post.file.url }}" type="audio/wav">
+              {% elif ".ogg" in url %}
+                <source src="{{ post.file.url }}" type="audio/ogg">
+              {% else %}
+                <source src="{{ post.file.url }}">
+              {% endif %}
+              Ваш браузер не підтримує відтворення аудіо.
+            </audio>
+          {% endif %}
         {% endwith %}
       {% endif %}
 
-      {% if post.link %}<p><a href="{{ post.link }}" target="_blank">{{ post.link }}</a></p>{% endif %}
+      {% if post.link %}
+        <p><a href="{{ post.link }}" target="_blank">{{ post.link }}</a></p>
+      {% endif %}
 
       <div class="post-actions">
         <button class="like-btn" data-post="{{ post.id }}">&#10084; <span class="like-count">{{ post.like_count }}</span></button>
@@ -106,7 +152,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!text) return;
       const postId = form.dataset.post;
       const res = await fetch(`/posts/${postId}/comment/`, {
-        method: 'POST', headers: { 'X-CSRFToken': csrfToken, 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ text })
+        method: 'POST',
+        headers: { 'X-CSRFToken': csrfToken, 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ text })
       });
       if (res.ok) {
         const data = await res.json();
@@ -114,10 +162,13 @@ document.addEventListener('DOMContentLoaded', () => {
         commentsBlock.querySelector('.no-comments')?.remove();
         const newComment = document.createElement('div');
         newComment.className = 'comment';
-        newComment.innerHTML = `<img src="${data.avatar_url}" class="avatar-comment" alt="avatar"><div class="comment-text"><b>${data.author}</b>: ${data.text}</div><a href="#" class="delete-comment-btn" data-comment="${data.comment_id}">&#10006;</a>`;
+        newComment.innerHTML = `<img src="${data.avatar_url}" class="avatar-comment" alt="avatar">
+          <div class="comment-text"><b>${data.author}</b>: ${data.text}</div>
+          <a href="#" class="delete-comment-btn" data-comment="${data.comment_id}">&#10006;</a>`;
         commentsBlock.insertBefore(newComment, form);
         input.value = '';
-        form.closest('.post-content').querySelector('.post-actions span').textContent = `${data.comment_count} коментарів`;
+        form.closest('.post-content').querySelector('.post-actions span').textContent =
+          `${data.comment_count} коментарів`;
       }
     });
   });
@@ -126,7 +177,10 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.like-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
       const postId = btn.dataset.post;
-      const res = await fetch(`/posts/${postId}/like/`, { method: 'POST', headers: { 'X-CSRFToken': csrfToken } });
+      const res = await fetch(`/posts/${postId}/like/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': csrfToken }
+      });
       if (res.ok) {
         const data = await res.json();
         btn.querySelector('.like-count').textContent = data.like_count;
@@ -137,8 +191,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // Vote
   document.querySelectorAll('.vote-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
-      const postId = btn.dataset.post, action = btn.dataset.action;
-      const res = await fetch(`/posts/${postId}/vote/${action}/`, { method: 'POST', headers: { 'X-CSRFToken': csrfToken } });
+      const postId = btn.dataset.post,
+        action = btn.dataset.action;
+      const res = await fetch(`/posts/${postId}/vote/${action}/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': csrfToken }
+      });
       if (res.ok) {
         const data = await res.json();
         document.getElementById(`score-${postId}`).textContent = data.score;
@@ -150,7 +208,10 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.repost-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
       const postId = btn.dataset.post;
-      const res = await fetch(`/posts/${postId}/repost/`, { method: 'POST', headers: { 'X-CSRFToken': csrfToken } });
+      const res = await fetch(`/posts/${postId}/repost/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': csrfToken }
+      });
       if (res.ok) alert('Репост успішний!');
     });
   });
@@ -160,7 +221,10 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.addEventListener('click', async () => {
       if (!confirm('Ви впевнені?')) return;
       const postId = btn.dataset.post;
-      const res = await fetch(`/posts/${postId}/delete/`, { method: 'POST', headers: { 'X-CSRFToken': csrfToken } });
+      const res = await fetch(`/posts/${postId}/delete/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': csrfToken }
+      });
       if (res.ok) btn.closest('.post-card').remove();
     });
   });
@@ -172,9 +236,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!confirm('Ви впевнені?')) return;
     const btn = e.target.closest('.delete-comment-btn');
     const commentId = btn.dataset.comment;
-    const res = await fetch(`/posts/comment/${commentId}/delete/`, { method: 'POST', headers: { 'X-CSRFToken': csrfToken } });
+    const res = await fetch(`/posts/comment/${commentId}/delete/`, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': csrfToken }
+    });
     if (res.ok) btn.closest('.comment').remove();
   });
 });
 </script>
+
 {% endblock %}
