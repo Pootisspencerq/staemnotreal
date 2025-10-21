@@ -1,3 +1,5 @@
+{% load static %}
+
 <ul class="list-group list-group-flush">
   {% if unread_notifications %}
     {% for n in unread_notifications %}
@@ -9,18 +11,31 @@
           <a href="{{ n.get_absolute_url }}" class="text-decoration-none stretched-link">
             {{ n.description|default:n.verb }}
           </a>
-          <div class="small text-muted">{{ n.timestamp|timesince }} ago</div>
+          <div class="small text-muted">{{ n.timestamp|timesince }} тому</div>
         </div>
-        <button type="button" class="btn btn-sm btn-outline-secondary ms-2 mark-read-btn" data-id="{{ n.pk }}" aria-label="Mark as read">
+        <button
+          type="button"
+          class="btn btn-sm btn-outline-secondary ms-2 mark-read-btn"
+          data-id="{{ n.pk }}"
+          aria-label="Позначити як прочитане"
+        >
           ✓
         </button>
       </li>
     {% endfor %}
     <li class="list-group-item text-center small">
-      <a href="{% url 'notifications:list' %}" class="me-2">View all</a>
-      <button id="mark-all-read-btn" class="btn btn-link btn-sm p-0">Mark all as read</button>
+      <a href="{% url 'notifications:list' %}" class="me-2">Переглянути всі</a>
+      <button
+        id="mark-all-read-btn"
+        class="btn btn-link btn-sm p-0"
+        type="button"
+      >
+        Позначити всі як прочитані
+      </button>
     </li>
   {% else %}
-    <li class="list-group-item text-center text-muted small">No new notifications</li>
+    <li class="list-group-item text-center text-muted small">
+      Немає нових сповіщень
+    </li>
   {% endif %}
 </ul>

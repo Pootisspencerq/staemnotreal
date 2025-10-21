@@ -9,21 +9,21 @@
   <div class="dropdown-menu dropdown-menu-end p-0 shadow" aria-labelledby="notificationsDropdown"
        style="min-width: 320px;">
     <div id="notifications-dropdown-content" class="p-0">
-      <div class="p-3 text-center text-muted small">Loading...</div>
+      <div class="p-3 text-center text-muted small">Завантаження...</div>
     </div>
   </div>
 </div>
 
 <script>
 (function () {
-  // --- CSRF helper ---
+  // --- Отримання CSRF токена ---
   function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
       const cookies = document.cookie.split(';');
-      for (let i = 0; i < cookies.length; i++) {
-        const cookie = cookies[i].trim();
-        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+      for (let cookie of cookies) {
+        cookie = cookie.trim();
+        if (cookie.startsWith(name + '=')) {
           cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
           break;
         }
@@ -33,31 +33,31 @@
   }
   const csrftoken = getCookie('csrftoken');
 
-  // --- Fetch and update unread count ---
+  // --- Оновлення кількості непрочитаних ---
   function updateCount() {
-    fetch('/notifications/unread-count/', {credentials: 'same-origin'})
+    fetch('/notifications/unread-count/', { credentials: 'same-origin' })
       .then(r => r.json())
       .then(data => {
         const badge = document.getElementById('notifications-badge');
         if (!badge) return;
-        const count = data.unread || 0;
+        const count = data.unread_count || 0;
         badge.textContent = count > 0 ? count : '';
         badge.style.display = count > 0 ? 'inline-block' : 'none';
       });
   }
 
-  // --- Load dropdown content (HTML) ---
+  // --- Завантаження HTML для дропдауну ---
   function loadDropdown() {
-    fetch('/notifications/dropdown/', {credentials: 'same-origin'})
-      .then(r => r.text())
-      .then(html => {
-        document.getElementById('notifications-dropdown-content').innerHTML = html;
+    fetch('/notifications/dropdown/', { credentials: 'same-origin' })
+      .then(r => r.json())
+      .then(data => {
+        document.getElementById('notifications-dropdown-content').innerHTML = data.html;
       });
   }
 
-  // --- Mark notification as read ---
+  // --- Позначення одного сповіщення прочитаним ---
   function markAsRead(id) {
-    fetch(`/notifications/mark-as-read/${id}/`, {
+    fetch(`/notifications/mark-as-read/${id}/`, {  // ✅ виправлено (було ajax/mark-as-read)
       method: 'POST',
       headers: {'X-CSRFToken': csrftoken, 'Accept': 'application/json'}
     })
@@ -68,9 +68,9 @@
     });
   }
 
-  // --- Mark all as read ---
+  // --- Позначити всі прочитаними ---
   function markAllAsRead() {
-    fetch(`/notifications/mark-as-read/all/`, {
+    fetch('/notifications/mark-all/', {
       method: 'POST',
       headers: {'X-CSRFToken': csrftoken, 'Accept': 'application/json'}
     })
@@ -81,24 +81,22 @@
     });
   }
 
-  // --- Event bindings ---
+  // --- Події кнопок ---
   document.addEventListener('click', function (e) {
-    // Single notification mark
     if (e.target.classList.contains('mark-read-btn')) {
       const id = e.target.dataset.id;
       if (id) markAsRead(id);
     }
-    // Mark all
     if (e.target.id === 'mark-all-read-btn') {
       markAllAsRead();
     }
   });
 
-  // When dropdown opens -> load latest HTML
-  document.getElementById('notificationsDropdown')
-    .addEventListener('show.bs.dropdown', loadDropdown);
+  // --- Завантаження при відкритті ---
+  const dropdown = document.getElementById('notificationsDropdown');
+  if (dropdown) dropdown.addEventListener('show.bs.dropdown', loadDropdown);
 
-  // Initial unread count and periodic updates
+  // --- Початкове оновлення і автооновлення ---
   updateCount();
   setInterval(updateCount, 10000);
 })();

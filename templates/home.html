@@ -4,51 +4,62 @@
 
 {% block content %}
 <div class="container mt-5 text-center">
-    <h1>Ласкаво просимо до StaemNotReal 🚀</h1>
+    <h1>Ласкаво просимо до StaemNotReal <i class="bi bi-rocket-takeoff-fill"></i></h1>
     <p>Це головна сторінка соціальної мережі.</p>
 
     {% if user.is_authenticated %}
-        <p class="text-success">Ви увійшли як {{ user.username }} ✅</p>
-        <a href="{% url 'accounts:logout' %}" class="btn btn-danger">Вийти</a>
+        <p class="text-success">Ви увійшли як {{ user.username }} <i class="bi bi-check-square-fill"></i></p>
 
-        <!-- Notifications dropdown -->
+        <!-- Кнопка виходу -->
+        <a href="{% url 'accounts:logout' %}" class="btn btn-danger">
+            <i class="bi bi-box-arrow-right me-1"></i> Вийти
+        </a>
+
+        <!-- Випадаюче меню сповіщень -->
         <div class="dropdown d-inline-block ms-3">
-            <button class="btn btn-primary dropdown-toggle" type="button" id="notifDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                Notifications <span id="unreadCount" class="badge bg-danger">{{ notifications|length }}</span>
+            <button class="btn btn-primary dropdown-toggle d-flex align-items-center" 
+                    type="button" id="notifDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-bell me-2"></i> <!-- 🔔 Іконка дзвіночка -->
+                <span>Сповіщення</span>
+                <span id="unreadCount" class="badge bg-danger ms-2">{{ notifications|length }}</span>
             </button>
-            <ul class="dropdown-menu" aria-labelledby="notifDropdown" id="notifMenu">
+
+            <ul class="dropdown-menu dropdown-menu-end text-start" aria-labelledby="notifDropdown" id="notifMenu" style="min-width: 260px;">
                 {% for n in notifications %}
                     <li class="{% if n.unread %}fw-bold{% endif %}">
-                        <a class="dropdown-item" href="{{ n.link|default:'#' }}">
-                            {{ n.verb }} - {{ n.timestamp|date:"H:i, d M Y" }}
+                        <a class="dropdown-item small" href="{{ n.link|default:'#' }}">
+                            <i class="bi bi-dot text-primary"></i> {{ n.verb }}
+                            <div class="text-muted small">{{ n.timestamp|date:"H:i, d M Y" }}</div>
                         </a>
                     </li>
                 {% empty %}
-                    <li><span class="dropdown-item">No notifications</span></li>
+                    <li><span class="dropdown-item text-muted small">Немає нових сповіщень</span></li>
                 {% endfor %}
             </ul>
         </div>
 
     {% else %}
-        <a href="{% url 'accounts:login' %}" class="btn btn-primary">Увійти</a>
-        <a href="{% url 'accounts:register' %}" class="btn btn-secondary">Реєстрація</a>
+        <a href="{% url 'accounts:login' %}" class="btn btn-primary">
+            <i class="bi bi-box-arrow-in-right me-1"></i> Увійти
+        </a>
+        <a href="{% url 'accounts:register' %}" class="btn btn-secondary">
+            <i class="bi bi-person-plus me-1"></i> Реєстрація
+        </a>
     {% endif %}
 </div>
 
-<!-- Optional: AJAX script to refresh unread count -->
+<!-- AJAX оновлення кількості непрочитаних -->
 {% if user.is_authenticated %}
 <script>
 function updateUnreadCount() {
     fetch("{% url 'notifications:ajax_unread_count' %}")
         .then(response => response.json())
         .then(data => {
-            document.getElementById('unreadCount').textContent = data.unread_count;
+            const badge = document.getElementById('unreadCount');
+            if (badge) badge.textContent = data.unread_count > 0 ? data.unread_count : '';
         });
 }
-
-// Refresh every 10 секунд
 setInterval(updateUnreadCount, 10000);
 </script>
 {% endif %}
-
 {% endblock %}
