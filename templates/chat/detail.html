@@ -12,7 +12,12 @@
         {% if chat.messages.exists %}
             {% for msg in chat.messages.all %}
                 <div class="mb-3 p-2 rounded" style="background: rgba(255,255,255,0.05);">
-                    <strong class="text-info">{{ msg.author.username }}</strong>:
+                    <strong class="text-info">
+                        <a href="{% url 'accounts:profile' msg.author.username %}" 
+                           class="text-info text-decoration-none">
+                            {{ msg.author.username }}
+                        </a>
+                    </strong>:
                     {% if msg.text %}
                         <span class="text-light">{{ msg.text|linebreaksbr }}</span>
                     {% endif %}
@@ -111,7 +116,12 @@ form.addEventListener('submit', async (e) => {
         }
 
         msgDiv.innerHTML = `
-            <strong class="text-info">${data.author_username}</strong>: 
+            <strong class="text-info">
+                <a href="/accounts/profile/${data.author_username}/" 
+                   class="text-info text-decoration-none">
+                    ${data.author_username}
+                </a>
+            </strong>: 
             <span class="text-light">${data.message || ''}</span>
             ${fileHTML}
             <div class="text-muted small mt-1">${new Date(data.created_at).toLocaleString()}</div>

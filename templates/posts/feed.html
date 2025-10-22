@@ -7,6 +7,14 @@
 {% block content %}
 
 <style>
+.avatar-post {
+  width: 70px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
 audio {
   background-color: #1e1e1e;
   border-radius: 8px;
@@ -46,16 +54,18 @@ img {
     </div>
 
     <div class="post-content">
-      <div class="post-header">
+      <div class="post-header d-flex align-items-center mb-2">
         {% if post.author.profile.avatar %}
-            <img src="{{ post.author.profile.avatar.url }}" class="avatar-post" alt="avatar">
+            <img src="{{ post.author.profile.avatar.url }}" class="avatar-post me-2" alt="avatar">
         {% else %}
-            <img src="{% static 'images/default-avatar.png' %}" class="avatar-post" alt="avatar">
+            <img src="{% static 'images/default-avatar.png' %}" class="avatar-post me-2" alt="avatar">
         {% endif %}
 
-        <div>
-          <div class="author">{{ post.author.username }}</div>
-          <div class="meta">{{ post.created_at|naturaltime }}</div>
+        <div class="d-flex flex-column">
+          <a href="{% url 'accounts:profile' post.author.username %}" class="fw-bold text-decoration-none text-primary">
+            {{ post.author.username }}
+          </a>
+          <small class="text-muted">{{ post.created_at|naturaltime }}</small>
         </div>
       </div>
 
@@ -116,7 +126,6 @@ img {
           {% else %}
               <img src="{% static 'images/default-avatar.png' %}" class="avatar-comment" alt="avatar">
           {% endif %}
-
           <div class="comment-text"><b>{{ comment.author.username }}</b>: {{ comment.text }}</div>
           {% if user == comment.author or user.is_staff %}
           <a href="#" class="delete-comment-btn" data-comment="{{ comment.id }}">&#10006;</a>
