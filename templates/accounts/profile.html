@@ -1,39 +1,8 @@
 {% extends "base.html" %}
-{% load static %}  {# <-- Must load static for {% static %} #}
+{% load static %}
 
 {% block content %}
-<style>
-  /* General dark theme adjustments */
-  body { background-color: #121212; color: #f5f5f5; }
-  .card { background-color: #1e1e1e; border: 1px solid #333; }
-  textarea, input[type="file"], input[type="text"] {
-      background-color: #222; color: #fff; border: 1px solid #444;
-  }
-  textarea::placeholder, input::placeholder { color: #bbb; }
 
-  /* Buttons */
-  .btn-primary { background-color: #007bff; border: none; }
-  .btn-primary:hover { background-color: #0069d9; }
-  .btn-outline-primary { color: #66b0ff; border-color: #66b0ff; }
-  .btn-outline-primary:hover { background-color: #007bff; color: #fff; }
-  .btn-danger { background-color: #dc3545; border: none; }
-  .btn-danger:hover { background-color: #c82333; }
-
-  /* Text & misc */
-  .text-muted { color: #aaa !important; }
-  hr { border-top: 1px solid #333; }
-  .comment-input { background-color: #1c1c1c; border: 1px solid #333; color: #fff; }
-  .input-group .btn { border-color: #333; }
-
-  /* Images */
-  img.rounded, .img-thumbnail { border: 1px solid #333; }
-  .avatar-post { width: 40px; height: 40px; object-fit: cover; border-radius: 50%; }
-  .avatar-comment { width: 30px; height: 30px; object-fit: cover; border-radius: 50%; }
-
-  /* Interactions */
-  .like-btn:hover { filter: brightness(1.2); }
-  .nav-pills .nav-link.active { background-color: #007bff; color: #fff; }
-</style>
 
 <div class="container mt-5">
     <div class="d-flex align-items-center mb-4 gap-3">
@@ -55,6 +24,46 @@
 
             {% if profile_user == user %}
                 <a href="{% url 'accounts:edit_profile' %}" class="btn btn-secondary mt-2">Редагувати профіль</a>
+            {% endif %}
+
+            {% if user.is_authenticated and profile_user != user %}
+                <div class="mt-3">
+                    {% if is_friend %}
+                        <form method="post" action="{% url 'accounts:remove_friend' profile_user.id %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button class="btn btn-danger btn-sm">
+                                <i class="bi bi-person-x me-1"></i> Видалити з друзів
+                            </button>
+                        </form>
+                    {% elif received_request %}
+                        <form method="post" action="{% url 'accounts:accept_friend_request' received_request.id %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button class="btn btn-success btn-sm me-1">
+                                <i class="bi bi-check-circle me-1"></i> Прийняти
+                            </button>
+                        </form>
+                        <form method="post" action="{% url 'accounts:decline_friend_request' received_request.id %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button class="btn btn-secondary btn-sm">
+                                <i class="bi bi-x-circle me-1"></i> Відхилити
+                            </button>
+                        </form>
+                    {% elif sent_request %}
+                        <form method="post" action="{% url 'accounts:cancel_friend_request' sent_request.id %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button class="btn btn-warning btn-sm">
+                                <i class="bi bi-clock-history me-1"></i> Скасувати запит
+                            </button>
+                        </form>
+                    {% else %}
+                        <form method="post" action="{% url 'accounts:send_friend_request' profile_user.id %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button class="btn btn-primary btn-sm">
+                                <i class="bi bi-person-plus me-1"></i> Додати в друзі
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
             {% endif %}
         </div>
     </div>

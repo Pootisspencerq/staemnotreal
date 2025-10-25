@@ -1,7 +1,21 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% block content %}
-<div class="text-center mt-5">
-  <h2><i class="bi bi-people"></i> Групи</h2>
-  <p>Тут ви можете керувати та переглядати всі ваші групи.</p>
+<div class="container mt-4">
+  <h2>Усі групи</h2>
+  <a href="{% url 'groups:create' %}" class="btn btn-success mb-3">Створити групу</a>
+
+
+  <ul class="list-group">
+    {% for group in groups %}
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        <a href="{% url 'groups:detail' group.id %}">{{ group.name }}</a>
+        {% if group.id in joined_group_ids %}
+          <span class="badge bg-primary">Твоя група</span>
+        {% endif %}
+      </li>
+    {% empty %}
+      <li class="list-group-item">Поки що немає груп.</li>
+    {% endfor %}
+  </ul>
 </div>
 {% endblock %}

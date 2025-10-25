@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h2>{{ group.name }}</h2>
+  <p>{{ group.description }}</p>
+  <p><strong>Власник:</strong> {{ group.owner.username }}</p>
+  <p><strong>Учасників:</strong> {{ members.count }}</p>
+
+<ul class="list-group mb-3">
+  {% for member in members %}
+    <li class="list-group-item">
+      <a href="{% url 'accounts:profile' username=member.user.username %}">
+        {{ member.user.username }}
+      </a>
+    </li>
+  {% endfor %}
+</ul>
+
+
+{% if is_member %}
+<form method="post" action="{% url 'groups:leave' group_id=group.id %}">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-warning">Вийти з групи</button>
+</form>
+{% else %}
+<form method="post" action="{% url 'groups:join' group_id=group.id %}">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-primary">Приєднатися</button>
+</form>
+{% endif %}
+
+
+  {% if group.owner == user %}
+    <a href="{% url 'groups:group_delete' group_id=group.id %}" class="btn btn-danger mt-3">Видалити групу</a>
+  {% endif %}
+</div>
+{% endblock %}

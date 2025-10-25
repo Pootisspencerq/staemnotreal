@@ -10,8 +10,8 @@
       {% for friend in friends %}
         <li class="list-group-item d-flex justify-content-between align-items-center">
           <div class="d-flex align-items-center">
-            {% if friend.user.profile.avatar %}
-              <img src="{{ friend.user.profile.avatar.url }}" alt="avatar"
+            {% if friend.avatar %}
+              <img src="{{ friend.avatar.url }}" alt="avatar"
                    class="rounded-circle me-3" style="width: 40px; height: 40px; object-fit: cover;">
             {% else %}
               <i class="bi bi-person-circle fs-3 text-secondary me-3"></i>

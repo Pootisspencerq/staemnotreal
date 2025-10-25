@@ -20,7 +20,7 @@ urlpatterns = [
     path("chat/", include("chat.urls")),          # Messaging
 
     # Other apps
-    path("groups/", include("groups.urls")),          
+    path("groups/", include("groups.urls")),        
     path('notifications/', include('notifications.urls')),
 ]
 
