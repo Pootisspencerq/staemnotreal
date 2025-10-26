@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h2>Керування модераторами групи: {{ group.name }}</h2>
+  <p>Тут ти можеш призначати або знімати модераторів серед учасників.</p>
+  <a href="{% url 'groups:detail' pk=group.id %}" class="btn btn-secondary mb-3">← Назад до групи</a>
+
+  <table class="table table-bordered bg-light">
+    <thead>
+      <tr>
+        <th>Користувач</th>
+        <th>Роль</th>
+        <th>Дія</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for member in members %}
+      <tr>
+        <td>{{ member.user.username }}</td>
+        <td>
+          {% if member.user == group.owner %}
+            <i class="bi bi-crown"></i> Власник
+          {% elif member.is_moderator %}
+            <i class="bi bi-shield"></i> Модератор
+          {% else %}
+            <i class="bi bi-person"></i> Учасник
+          {% endif %}
+        </td>
+        <td>
+          {% if member.user != group.owner %}
+            <a href="{% url 'groups:toggle_moderator' pk=group.id user_id=member.user.id %}" 
+               class="btn btn-sm {% if member.is_moderator %}btn-danger{% else %}btn-success{% endif %}">
+               {% if member.is_moderator %}Зняти{% else %}Призначити{% endif %}
+            </a>
+          {% endif %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="3" class="text-center">Немає учасників.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

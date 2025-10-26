@@ -1,37 +1,129 @@
 {% extends "base.html" %}
+{% load static %}
+
 {% block content %}
 <div class="container mt-4">
-  <h2>{{ group.name }}</h2>
+  <h2 class="mb-3">{{ group.name }}</h2>
   <p>{{ group.description }}</p>
-  <p><strong>Власник:</strong> {{ group.owner.username }}</p>
-  <p><strong>Учасників:</strong> {{ members.count }}</p>
+  <p><strong><i class="bi bi-person-badge"></i> Власник:</strong> {{ group.owner.username }}</p>
+  <p><strong><i class="bi bi-people"></i> Учасників:</strong> {{ members.count }}</p>
 
-<ul class="list-group mb-3">
-  {% for member in members %}
-    <li class="list-group-item">
-      <a href="{% url 'accounts:profile' username=member.user.username %}">
-        {{ member.user.username }}
-      </a>
-    </li>
-  {% endfor %}
-</ul>
+  <ul class="list-group mb-3">
+    {% for member in members %}
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center gap-2">
+          {% if member.user.profile.avatar %}
+            <img src="{{ member.user.profile.avatar.url }}" alt="Avatar" class="rounded-circle" width="35" height="35" style="object-fit: cover;">
+          {% else %}
+            <img src="{% static 'images/default-avatar.png' %}" alt="Avatar" class="rounded-circle" width="35" height="35" style="object-fit: cover;">
+          {% endif %}
+          <a href="{% url 'accounts:profile' username=member.user.username %}" class="text-decoration-none">
+            {{ member.user.username }}
+          </a>
+        </div>
 
+        {% if member.user == group.owner %}
+          <span class="badge bg-warning text-dark"><i class="bi bi-crown"></i> Власник</span>
+        {% elif member.is_moderator %}
+          <span class="badge bg-info text-dark"><i class="bi bi-shield"></i> Модератор</span>
+        {% else %}
+          <span class="badge bg-secondary"><i class="bi bi-person"></i> Учасник</span>
+        {% endif %}
+      </li>
+    {% empty %}
+      <li class="list-group-item text-center text-muted">Поки що немає учасників.</li>
+    {% endfor %}
+  </ul>
 
-{% if is_member %}
-<form method="post" action="{% url 'groups:leave' group_id=group.id %}">
-    {% csrf_token %}
-    <button type="submit" class="btn btn-warning">Вийти з групи</button>
-</form>
-{% else %}
-<form method="post" action="{% url 'groups:join' group_id=group.id %}">
-    {% csrf_token %}
-    <button type="submit" class="btn btn-primary">Приєднатися</button>
-</form>
-{% endif %}
-
+  {% if is_member %}
+    <form method="post" action="{% url 'groups:leave' pk=group.id %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-warning"><i class="bi bi-box-arrow-left"></i> Вийти з групи</button>
+    </form>
+  {% else %}
+    <form method="post" action="{% url 'groups:join' pk=group.id %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary"><i class="bi bi-box-arrow-in-right"></i> Приєднатися</button>
+    </form>
+  {% endif %}
 
   {% if group.owner == user %}
-    <a href="{% url 'groups:group_delete' group_id=group.id %}" class="btn btn-danger mt-3">Видалити групу</a>
+    <div class="mt-4 d-flex gap-2">
+      <a href="{% url 'groups:delete_group' pk=group.id %}" class="btn btn-danger">
+        <i class="bi bi-trash"></i> Видалити групу
+      </a>
+      <a href="{% url 'groups:manage_moderators' pk=group.id %}" class="btn btn-outline-primary">
+        <i class="bi bi-person-gear"></i> Керувати модераторами
+      </a>
+    </div>
+  {% endif %}
+
+  {% if is_member %}
+    <hr class="my-4">
+    <h4 class="mb-3"><i class="bi bi-chat-dots"></i> Публікації в групі</h4>
+    <a href="{% url 'groups:post_create' pk=group.id %}" class="btn btn-success mb-3">
+      <i class="bi bi-pencil-square"></i> Створити пост
+    </a>
+
+    {% if posts %}
+      {% for post in posts %}
+        <div class="card mb-3 shadow-sm">
+          <div class="card-body">
+            <div class="d-flex align-items-center mb-2 gap-2">
+              {% if post.author.profile.avatar %}
+                <img src="{{ post.author.profile.avatar.url }}" alt="Avatar" class="rounded-circle" width="40" height="40" style="object-fit: cover;">
+              {% else %}
+                <img src="{% static 'images/default-avatar.png' %}" alt="Avatar" class="rounded-circle" width="40" height="40" style="object-fit: cover;">
+              {% endif %}
+              <h5 class="card-title mb-0">{{ post.author.username }}</h5>
+            </div>
+
+            <p class="card-text">{{ post.content }}</p>
+
+            {% if post.file %}
+              {% with post.file.url|lower as file_url %}
+                {% if ".jpg" in file_url or ".jpeg" in file_url or ".png" in file_url or ".gif" in file_url %}
+                  <img src="{{ post.file.url }}" alt="Файл поста" class="img-fluid rounded mb-2" style="max-height: 300px; object-fit: contain;">
+                {% elif ".mp4" in file_url or ".webm" in file_url %}
+                  <video controls class="w-100 rounded mb-2" style="max-height: 400px; object-fit: contain;">
+                    <source src="{{ post.file.url }}">
+                    Ваш браузер не підтримує відео.
+                  </video>
+                {% elif ".pdf" in file_url %}
+                  <a href="{{ post.file.url }}" target="_blank" class="btn btn-outline-danger btn-sm mb-2">
+                    <i class="bi bi-file-earmark-pdf"></i> Відкрити PDF
+                  </a>
+                {% elif ".txt" in file_url or ".doc" in file_url or ".docx" in file_url %}
+                  <a href="{{ post.file.url }}" class="btn btn-outline-secondary btn-sm mb-2" download>
+                    <i class="bi bi-file-earmark-text"></i> Завантажити документ
+                  </a>
+                {% elif ".zip" in file_url or ".rar" in file_url or ".7z" in file_url %}
+                  <a href="{{ post.file.url }}" class="btn btn-outline-dark btn-sm mb-2" download>
+                    <i class="bi bi-file-earmark-zip"></i> Завантажити архів
+                  </a>
+                {% else %}
+                  <a href="{{ post.file.url }}" class="btn btn-outline-secondary btn-sm mb-2" download>
+                    <i class="bi bi-paperclip"></i> Завантажити файл
+                  </a>
+                {% endif %}
+              {% endwith %}
+            {% endif %}
+
+            <p class="text-muted mt-2 mb-1">
+              <small><i class="bi bi-clock"></i> {{ post.created_at|date:"d.m.Y H:i" }}</small>
+            </p>
+
+            {% if user == post.author or user == group.owner or membership.is_moderator %}
+              <a href="{% url 'groups:post_delete' pk=group.id post_id=post.id %}" class="btn btn-sm btn-outline-danger">
+                <i class="bi bi-trash3"></i> Видалити пост
+              </a>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <p class="text-muted">Поки що немає постів у цій групі.</p>
+    {% endif %}
   {% endif %}
 </div>
 {% endblock %}
