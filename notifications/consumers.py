@@ -1,19 +1,32 @@
+# staemnotreal/notifications/consumers.py
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
-from django.contrib.auth.models import AnonymousUser
 
-class NotificationConsumer(AsyncWebsocketConsumer):
+class NotificationsConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        user = self.scope["user"]
-        if user.is_anonymous:
+        user = self.scope.get("user")
+        if user is None or user.is_anonymous:
             await self.close()
-        else:
-            self.group_name = f"user_{user.id}_notifications"
-            await self.channel_layer.group_add(self.group_name, self.channel_name)
-            await self.accept()
+            return
+        self.group_name = f"notifications_{user.id}"
+        await self.channel_layer.group_add(self.group_name, self.channel_name)
+        await self.accept()
 
     async def disconnect(self, close_code):
-        await self.channel_layer.group_discard(self.group_name, self.channel_name)
+        if hasattr(self, "group_name"):
+            await self.channel_layer.group_discard(self.group_name, self.channel_name)
 
-    async def send_notification(self, event):
-        await self.send(text_data=json.dumps(event["content"]))
+    async def notify(self, event):
+        """Сервер шле подію до клієнта"""
+        data = event.get("data", {})
+        await self.send(text_data=json.dumps(data))
+
+    async def receive(self, text_data=None, bytes_data=None):
+        """Опціонально приймаємо повідомлення від клієнта (наприклад ping)"""
+        if text_data:
+            try:
+                msg = json.loads(text_data)
+            except Exception:
+                return
+            if msg.get("type") == "ping":
+                await self.send(text_data=json.dumps({"type": "pong"}))

@@ -62,6 +62,8 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 # Додаємо свій процесор для сповіщень
                  'notifications.context_processors.notifications_processor',
+                 'notifications.context_processors.unread_notifications',
+
             ],
         },
     },

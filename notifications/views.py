@@ -11,21 +11,21 @@ from django.views.decorators.http import require_POST
 class MarkAsReadView(View):
     def get(self, request, pk):
         notification = get_object_or_404(Notification, pk=pk, recipient=request.user)
-        notification.unread = False
+        notification.is_read = True
         notification.save()
         return redirect('notifications:list')
 
 
 @login_required
 def ajax_list(request):
-    unread_count = Notification.objects.filter(recipient=request.user, unread=True).count()
+    unread_count = Notification.objects.filter(recipient=request.user, is_read=False).count()
     return JsonResponse({'unread_count': unread_count})
 
 
 @login_required
 def mark_read(request):
     """Позначає всі сповіщення як прочитані"""
-    Notification.objects.filter(recipient=request.user, unread=True).update(unread=False)
+    Notification.objects.filter(recipient=request.user, is_read=False).update(is_read=True)
     return JsonResponse({'status': 'ok'})
 
 
@@ -42,7 +42,7 @@ def notification_list(request):
 def ajax_mark_as_read(request, pk):
     """AJAX: помітити конкретне сповіщення як прочитане"""
     notif = get_object_or_404(Notification, pk=pk, recipient=request.user)
-    notif.unread = False
+    notif.is_read = True
     notif.save()
     return JsonResponse({'ok': True, 'pk': pk})
 
@@ -50,7 +50,7 @@ def ajax_mark_as_read(request, pk):
 @login_required
 def ajax_unread_count(request):
     """AJAX: повернути кількість непрочитаних"""
-    count = Notification.objects.filter(recipient=request.user, unread=True).count()
+    count = Notification.objects.filter(recipient=request.user, is_read=False).count()
     return JsonResponse({'unread_count': count})
 
 

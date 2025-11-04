@@ -19,7 +19,7 @@ class Profile(models.Model):
     cover = models.ImageField(upload_to='covers/', blank=True, null=True)
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='user')
 
-    # 💬 Додаємо список друзів
+    # 💬 Друзі
     friends = models.ManyToManyField("self", symmetrical=True, blank=True)
 
     def __str__(self):
@@ -27,23 +27,25 @@ class Profile(models.Model):
 
     def add_friend(self, profile):
         """Додає користувача до друзів (двосторонньо)"""
-        self.friends.add(profile)
-        profile.friends.add(self)
+        if profile != self:
+            self.friends.add(profile)
+            profile.friends.add(self)
 
     def remove_friend(self, profile):
         """Видаляє дружбу"""
-        self.friends.remove(profile)
-        profile.friends.remove(self)
+        if profile in self.friends.all():
+            self.friends.remove(profile)
+            profile.friends.remove(self)
 
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def create_or_update_user_profile(sender, instance, created, **kwargs):
-    """Створює профіль при створенні користувача"""
+    """Створює або оновлює профіль при створенні користувача"""
     if created:
         Profile.objects.create(user=instance)
     else:
-        Profile.objects.get_or_create(user=instance)
-        instance.profile.save()
+        profile, _ = Profile.objects.get_or_create(user=instance)
+        profile.save()
 
 
 class Follow(models.Model):
@@ -80,10 +82,11 @@ class FriendRequest(models.Model):
         """Підтвердження дружби"""
         self.status = 'accepted'
         self.save()
+
         # додаємо двосторонню дружбу
         self.from_user.profile.add_friend(self.to_user.profile)
 
-        # створюємо сповіщення (якщо notifications app існує)
+        # створюємо сповіщення, якщо модуль notifications існує
         try:
             from notifications.models import Notification
             Notification.objects.create(
@@ -92,14 +95,16 @@ class FriendRequest(models.Model):
                 message=f"{self.to_user.username} прийняв(ла) твій запит у друзі.",
                 notification_type="friend_accepted"
             )
-        except Exception:
-            pass
+        except ModuleNotFoundError:
+            print("⚠️ notifications app not found — сповіщення не створено")
 
     def decline(self):
+        """Відхиляє запит у друзі"""
         self.status = 'declined'
         self.save()
 
     def cancel(self):
+        """Скасовує запит у друзі"""
         self.status = 'cancelled'
         self.save()
 

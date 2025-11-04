@@ -349,6 +349,7 @@ input:focus, textarea:focus, select:focus {
     margin-right: 0.5rem;
   }
 }
+
 /* === Fix file input (Темна кнопка вибору файлу) === */
 input[type="file"] {
   color: var(--text);

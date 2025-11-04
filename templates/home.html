@@ -16,26 +16,26 @@
         </a>
 
         <!-- Випадаюче меню сповіщень -->
-        <div class="dropdown d-inline-block ms-3">
-            <button class="btn btn-primary dropdown-toggle d-flex align-items-center" 
-                    type="button" id="notifDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="bi bi-bell me-2"></i> <!-- 🔔 Іконка дзвіночка -->
+        <div class="dropdown d-inline-block ml-3">
+            <button class="btn btn-primary dropdown-toggle d-flex align-items-center"
+                    type="button" id="notifDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <i class="bi bi-bell mr-2"></i>
                 <span>Сповіщення</span>
-                <span id="unreadCount" class="badge bg-danger ms-2">{{ notifications|length }}</span>
+                <span id="unreadCount" class="badge badge-danger ml-2">
+                    {% if notifications|length > 0 %}{{ notifications|length }}{% endif %}
+                </span>
             </button>
 
-            <ul class="dropdown-menu dropdown-menu-end text-start" aria-labelledby="notifDropdown" id="notifMenu" style="min-width: 260px;">
+            <div class="dropdown-menu dropdown-menu-right text-start" aria-labelledby="notifDropdown" id="notifMenu" style="min-width: 260px;">
                 {% for n in notifications %}
-                    <li class="{% if n.unread %}fw-bold{% endif %}">
-                        <a class="dropdown-item small" href="{{ n.link|default:'#' }}">
-                            <i class="bi bi-dot text-primary"></i> {{ n.verb }}
-                            <div class="text-muted small">{{ n.timestamp|date:"H:i, d M Y" }}</div>
-                        </a>
-                    </li>
+                    <a class="dropdown-item small {% if n.unread %}font-weight-bold{% endif %}" href="{{ n.link|default:'#' }}">
+                        <i class="bi bi-dot text-primary"></i> {{ n.verb }}
+                        <div class="text-muted small">{{ n.timestamp|date:"H:i, d M Y" }}</div>
+                    </a>
                 {% empty %}
-                    <li><span class="dropdown-item text-muted small">Немає нових сповіщень</span></li>
+                    <span class="dropdown-item text-muted small">Немає нових сповіщень</span>
                 {% endfor %}
-            </ul>
+            </div>
         </div>
 
     {% else %}
@@ -48,7 +48,6 @@
     {% endif %}
 </div>
 
-<!-- AJAX оновлення кількості непрочитаних -->
 {% if user.is_authenticated %}
 <script>
 function updateUnreadCount() {
