@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Чати{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Список користувачів</h2>
+    <ul class="list-group">
+        {% for user in users %}
+            <li class="list-group-item">
+                <a href="{% url 'chat:detail' user.id %}">{{ user.username }}</a>
+            </li>
+        {% empty %}
+            <li class="list-group-item">Немає користувачів для чату.</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

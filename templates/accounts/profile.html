@@ -2,8 +2,6 @@
 {% load static %}
 
 {% block content %}
-
-
 <div class="container mt-5">
     <div class="d-flex align-items-center mb-4 gap-3">
         {% if profile.avatar %}
@@ -24,44 +22,32 @@
 
             {% if profile_user == user %}
                 <a href="{% url 'accounts:edit_profile' %}" class="btn btn-secondary mt-2">Редагувати профіль</a>
-            {% endif %}
-
-            {% if user.is_authenticated and profile_user != user %}
+            {% elif user.is_authenticated %}
                 <div class="mt-3">
+                    {% comment %} Кнопки дружби через модуль friends {% endcomment %}
                     {% if is_friend %}
-                        <form method="post" action="{% url 'accounts:remove_friend' profile_user.id %}" style="display:inline;">
+                        <form method="post" action="{% url 'friends:remove_friend' profile_user.id %}" style="display:inline;">
                             {% csrf_token %}
                             <button class="btn btn-danger btn-sm">
                                 <i class="bi bi-person-x me-1"></i> Видалити з друзів
                             </button>
                         </form>
-                    {% elif received_request %}
-                        <form method="post" action="{% url 'accounts:accept_friend_request' received_request.id %}" style="display:inline;">
-                            {% csrf_token %}
-                            <button class="btn btn-success btn-sm me-1">
-                                <i class="bi bi-check-circle me-1"></i> Прийняти
-                            </button>
-                        </form>
-                        <form method="post" action="{% url 'accounts:decline_friend_request' received_request.id %}" style="display:inline;">
-                            {% csrf_token %}
-                            <button class="btn btn-secondary btn-sm">
-                                <i class="bi bi-x-circle me-1"></i> Відхилити
-                            </button>
-                        </form>
                     {% elif sent_request %}
-                        <form method="post" action="{% url 'accounts:cancel_friend_request' sent_request.id %}" style="display:inline;">
+                        <span class="badge bg-warning text-dark">Запит надіслано</span>
+                    {% elif received_request %}
+                        <form method="post" action="{% url 'friends:accept_friend_request' received_request.id %}" style="display:inline;">
                             {% csrf_token %}
-                            <button class="btn btn-warning btn-sm">
-                                <i class="bi bi-clock-history me-1"></i> Скасувати запит
+                            <button class="btn btn-success btn-sm">
+                                <i class="bi bi-person-check me-1"></i> Прийняти запит
                             </button>
                         </form>
                     {% else %}
-                        <form method="post" action="{% url 'accounts:send_friend_request' profile_user.id %}" style="display:inline;">
-                            {% csrf_token %}
-                            <button class="btn btn-primary btn-sm">
-                                <i class="bi bi-person-plus me-1"></i> Додати в друзі
-                            </button>
-                        </form>
+                            <form method="post" action="{% url 'friends:send' profile_user.id %}">
+                                {% csrf_token %}
+                                <button class="btn btn-primary btn-sm">
+                                    <i class="bi bi-person-plus me-1"></i> Додати в друзі
+                                </button>
+                            </form>
                     {% endif %}
                 </div>
             {% endif %}

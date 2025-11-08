@@ -22,6 +22,7 @@ urlpatterns = [
     # Other apps
     path("groups/", include("groups.urls")),        
     path('notifications/', include('notifications.urls')),
+    path('friends/', include(('friends.urls', 'friends'), namespace='friends')),
 ]
 
 if settings.DEBUG:

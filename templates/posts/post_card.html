@@ -5,7 +5,7 @@
 
     <!-- === Автор посту === -->
     <div class="d-flex align-items-center mb-3 post-header">
-      <img src="{% if post.author.profile.avatar %}{{ post.author.profile.avatar.url }}{% else %}{% static 'images/default-avatar.png' %}{% endif %}" 
+      <img src="{% if post.author.profile.avatar %}{{ post.author.profile.avatar.url }}{% else %}{% static 'images/default-avatar.png' %}{% endif %}" class="rounded-circle" width="40" height="40" style="object-fit: cover;" 
            alt="avatar" class="avatar-post me-2"
            onerror="this.onerror=null;this.src='{% static 'images/default-avatar.png' %}'">
       <div>

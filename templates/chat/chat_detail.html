@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Чат з {{ other_user.username }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Чат з {{ other_user.username }}</h2>
+
+    <div class="mb-3" style="max-height:400px; overflow-y:auto; border:1px solid #ccc; padding:10px;">
+        {% for msg in messages %}
+            <div class="mb-2 {% if msg.sender == request.user %}text-end{% endif %}">
+                <strong>{{ msg.sender.username }}:</strong> {{ msg.text }}
+                <small class="text-muted">{{ msg.created_at|date:"H:i, d M" }}</small>
+            </div>
+        {% empty %}
+            <p>Немає повідомлень.</p>
+        {% endfor %}
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="input-group">
+            <input type="text" name="text" class="form-control" placeholder="Написати повідомлення...">
+            <button class="btn btn-primary">Відправити</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

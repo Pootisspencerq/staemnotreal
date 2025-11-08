@@ -51,7 +51,7 @@
       <ul class="navbar-nav mr-auto">
         <li class="nav-item"><a class="nav-link" href="{% url 'home' %}"><i class="fas fa-home"></i> Головна</a></li>
         <li class="nav-item"><a class="nav-link" href="{% url 'posts:feed' %}"><i class="fas fa-newspaper"></i> Стрічка</a></li>
-        <li class="nav-item"><a class="nav-link" href="{% url 'chat:inbox' %}"><i class="fas fa-comments"></i> Чати</a></li>
+        <a class="nav-link" href="{% url 'chat:chat_list' %}"><i class="fas fa-comments"></i> Чати</a>
         <li class="nav-item"><a class="nav-link" href="{% url 'groups:list' %}"><i class="fas fa-users"></i> Групи</a></li>
       </ul>
 

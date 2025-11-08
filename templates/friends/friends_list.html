@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Мої друзі — StaemNotReal{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-3"><i class="bi bi-people-fill me-2"></i>Мої друзі</h2>
+
+  {% if friends %}
+    <ul class="list-group shadow-sm">
+      {% for friend in friends %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <div class="d-flex align-items-center">
+            {% if friend.avatar %}
+              <img src="{{ friend.avatar.url }}" alt="avatar"
+                   class="rounded-circle me-3" style="width: 40px; height: 40px; object-fit: cover;">
+            {% else %}
+              <i class="bi bi-person-circle fs-3 text-secondary me-3"></i>
+            {% endif %}
+            <a href="{% url 'accounts:profile' friend.user.username %}" class="fw-semibold text-decoration-none">
+              {{ friend.user.username }}
+            </a>
+          </div>
+          <a href="{% url 'accounts:remove_friend' friend.user.id %}" class="btn btn-sm btn-outline-danger">
+            <i class="bi bi-person-dash me-1"></i> Видалити
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <div class="alert alert-info mt-3" role="alert">
+      <i class="bi bi-info-circle me-2"></i> У вас поки немає друзів.
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
