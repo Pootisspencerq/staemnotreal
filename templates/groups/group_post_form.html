@@ -1,11 +1,16 @@
 {% extends "base.html" %}
+{% load static %}
+
+{% block title %}Новий пост у {{ group.name }}{% endblock %}
+
 {% block content %}
 <div class="container mt-5" style="max-width: 600px;">
-  <div class="card shadow-sm">
+  <div class="card shadow-sm border-0">
     <div class="card-header bg-primary text-white">
       <h4 class="mb-0">✏️ Новий пост у групі: {{ group.name }}</h4>
     </div>
-    <div class="card-body">
+
+    <div class="card-body bg-dark text-light">
       <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
 
@@ -15,25 +20,19 @@
           </div>
         {% endif %}
 
-        <div class="mb-3">
-          <label for="id_content" class="form-label">Текст поста</label>
-          {{ form.content }}
-          {% for error in form.content.errors %}
-            <div class="text-danger small">{{ error }}</div>
-          {% endfor %}
-        </div>
-
-        <div class="mb-3">
-          <label for="id_file" class="form-label">Прикріпити файл (будь-який тип)</label>
-          {{ form.file }}
-          {% for error in form.file.errors %}
-            <div class="text-danger small">{{ error }}</div>
-          {% endfor %}
-        </div>
-
-        <button type="submit" class="btn btn-success w-100">📤 Опублікувати</button>
+        <!-- Підключаємо спільну форму -->
+        {% include "posts/_post_form.html" %}
       </form>
     </div>
   </div>
 </div>
+
+<style>
+form textarea, form input {
+  background-color: #222 !important;
+  color: #fff !important;
+  border-color: #444 !important;
+}
+form textarea::placeholder, form input::placeholder { color: #888; }
+</style>
 {% endblock %}

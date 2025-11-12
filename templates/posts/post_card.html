@@ -1,105 +1,93 @@
+<div class="post-card bg-dark rounded shadow-sm p-3 mb-4 d-flex gap-3 align-items-start">
 {% load static %}
+{% load humanize %}
 
-<div class="card mb-4 shadow-sm border-0 rounded-3 text-light">
-  <div class="card-body">
+  <!-- Голосування -->
+  <div class="vote-column text-center">
+    <button type="button" class="vote-btn btn btn-outline-light btn-sm d-block mb-1" data-post="{{ post.id }}" data-action="up" title="Upvote">▲</button>
+    <div class="vote-count text-light fw-bold" id="score-{{ post.id }}">{{ post.vote_score }}</div>
+    <button type="button" class="vote-btn btn btn-outline-light btn-sm d-block mt-1" data-post="{{ post.id }}" data-action="down" title="Downvote">▼</button>
+  </div>
 
-    <!-- === Автор посту === -->
-    <div class="d-flex align-items-center mb-3 post-header">
-      <img src="{% if post.author.profile.avatar %}{{ post.author.profile.avatar.url }}{% else %}{% static 'images/default-avatar.png' %}{% endif %}" class="rounded-circle" width="40" height="40" style="object-fit: cover;" 
-           alt="avatar" class="avatar-post me-2"
-           onerror="this.onerror=null;this.src='{% static 'images/default-avatar.png' %}'">
+  <div class="flex-grow-1">
+    <!-- Шапка поста -->
+    <div class="d-flex align-items-center mb-2">
+      <div class="me-2">
+        {% if post.author.profile.avatar %}
+          <img src="{{ post.author.profile.avatar.url }}" class="rounded-circle border" style="width:42px;height:42px;object-fit:cover;" alt="avatar">
+        {% else %}
+          <img src="{% static 'images/default-avatar.png' %}" class="rounded-circle border" style="width:42px;height:42px;object-fit:cover;" alt="avatar">
+        {% endif %}
+      </div>
       <div>
-        <strong>{{ post.author.username }}</strong><br>
-        <small class="text-muted">{{ post.created_at|date:"H:i d.m.Y" }}</small>
+        <a href="{% url 'accounts:profile' post.author.username %}" class="fw-semibold text-primary text-decoration-none">{{ post.author.username }}</a><br>
+        <small class="text-muted">{{ post.created_at|naturaltime }}</small>
       </div>
     </div>
 
-    <!-- === Текст посту === -->
+    <!-- Контент -->
     {% if post.text %}
-      <p class="mt-2 mb-3">{{ post.text|linebreaksbr }}</p>
+      <p class="text-light mb-2">{{ post.text|linebreaksbr }}</p>
     {% endif %}
 
-    <!-- === Фото посту === -->
-    {% if post.img %}
-      <img src="{{ post.img.url }}" class="post-image rounded mb-3" alt="Post image">
+    {% if post.file %}
+      {% with post.file.url|lower as url %}
+        {% if ".jpg" in url or ".png" in url or ".jpeg" in url or ".gif" in url %}
+          <img src="{{ post.file.url }}" class="img-fluid rounded mb-2">
+        {% elif ".mp4" in url or ".webm" in url %}
+          <video controls preload="metadata" class="w-100 rounded mb-2"><source src="{{ post.file.url }}"></video>
+        {% elif ".mp3" in url or ".wav" in url or ".ogg" in url %}
+          <audio controls preload="metadata" class="w-100 mb-2"><source src="{{ post.file.url }}"></audio>
+        {% endif %}
+      {% endwith %}
     {% endif %}
 
-    <!-- === Відео посту === -->
-    {% if post.video %}
-      <video controls class="mb-3 w-100">
-        <source src="{{ post.video.url }}">
-        Ваш браузер не підтримує відео.
-      </video>
-    {% endif %}
-
-    <!-- === Файл посту === -->
-    {% if post.file and not post.img and not post.video %}
-      <a href="{{ post.file.url }}" class="file-link mb-3 d-block" download>📎 Завантажити файл</a>
-    {% endif %}
-
-    <!-- === Посилання посту === -->
     {% if post.link %}
-      <p class="mt-2"><a href="{{ post.link }}" target="_blank" class="file-link">🔗 {{ post.link }}</a></p>
+      <p><a href="{{ post.link }}" target="_blank" rel="noopener noreferrer">{{ post.link }}</a></p>
     {% endif %}
 
-    <!-- === Кнопки === -->
-    <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
-      <button class="btn btn-sm {% if post.liked_by_user %}btn-danger{% else %}btn-outline-danger{% endif %} like-btn" data-post="{{ post.id }}">
-        <i class="bi bi-heart-fill"></i> <span class="like-count">{{ post.like_count }}</span>
-      </button>
-
-      <span class="text-muted">
-        <i class="bi bi-chat-dots"></i> <span class="comment-count">{{ post.comment_count }}</span>
-      </span>
-
-      {% if post.author == user %}
-        <a href="{% url 'posts:edit_post' post.id %}" class="btn btn-sm btn-warning">
-          <i class="bi bi-pencil-square"></i>
-        </a>
-      {% endif %}
-
-      {% if user.is_staff or user.is_superuser %}
-        <a href="{% url 'posts:delete_post' post.id %}" class="btn btn-sm btn-outline-danger">
-          <i class="bi bi-trash"></i>
-        </a>
-      {% endif %}
-
-      <form action="{% url 'posts:repost_post' post.id %}" method="post" class="ms-auto">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-outline-info btn-sm">
-          <i class="bi bi-arrow-repeat"></i> Репост
+    <!-- Дії -->
+    <div class="d-flex justify-content-between align-items-center mt-3">
+      <div>
+        <button type="button" class="like-btn btn btn-sm btn-outline-light" data-post="{{ post.id }}">
+          <i class="bi {% if post.liked_by_user %}bi-heart-fill text-danger{% else %}bi-heart{% endif %}"></i>
+          <span class="like-count">{{ post.like_count }}</span>
         </button>
-      </form>
+        <span class="comment-count text-muted ms-2">{{ post.comment_count }} коментарів</span>
+      </div>
+      <div>
+        {% if user == post.author %}
+          <button type="button" class="delete-post-btn btn btn-sm btn-outline-danger" data-post="{{ post.id }}"><i class="bi bi-trash"></i></button>
+        {% endif %}
+        <button type="button" class="repost-btn btn btn-sm btn-outline-info" data-post="{{ post.id }}"><i class="bi bi-share"></i></button>
+      </div>
     </div>
 
-    <!-- === Коментарі === -->
-    <div class="mt-3 border-top pt-2 comments-block" data-post="{{ post.id }}">
+    <!-- Коментарі -->
+    <div class="comments-block mt-3">
       {% for comment in post.comments.all %}
-        <div class="d-flex justify-content-between align-items-start mb-2">
-          <p class="mb-1 flex-grow-1 d-flex align-items-center">
-            <img src="{% if comment.author.profile.avatar %}{{ comment.author.profile.avatar.url }}{% else %}{% static 'images/default-avatar.png' %}{% endif %}" 
-                 alt="avatar" class="avatar-comment me-1"
-                 onerror="this.onerror=null;this.src='{% static 'images/default-avatar.png' %}'">
+        <div class="comment d-flex align-items-center mb-2">
+          {% if comment.author.profile.avatar %}
+            <img src="{{ comment.author.profile.avatar.url }}" class="rounded-circle me-2" style="width:30px;height:30px;object-fit:cover;" alt="avatar">
+          {% else %}
+            <img src="{% static 'images/default-avatar.png' %}" class="rounded-circle me-2" style="width:30px;height:30px;object-fit:cover;" alt="avatar">
+          {% endif %}
+          <div class="flex-grow-1">
             <b>{{ comment.author.username }}</b>: {{ comment.text }}
-          </p>
-          {% if comment.author == user or user.is_staff or user.is_superuser %}
-            <a href="{% url 'posts:delete_comment' comment.id %}" class="btn btn-link btn-sm text-danger p-0">
-              <i class="bi bi-x-circle"></i>
-            </a>
+          </div>
+          {% if user == comment.author or user.is_staff %}
+            <button type="button" class="delete-comment-btn btn btn-sm btn-outline-danger ms-2" data-comment="{{ comment.id }}">✖</button>
           {% endif %}
         </div>
       {% empty %}
-        <p class="text-muted mb-1 no-comments">
-          <i class="bi bi-emoji-frown"></i> Немає коментарів
-        </p>
+        <p class="text-muted small">Ще немає коментарів</p>
       {% endfor %}
 
-      <form method="post" class="input-group input-group-sm mt-2 comment-form" data-post="{{ post.id }}">
+      <form class="comment-form d-flex mt-2" data-post="{{ post.id }}">
         {% csrf_token %}
-        <input type="text" name="text" class="form-control comment-input" placeholder="Напишіть коментар..." required>
-        <button type="submit" class="btn btn-outline-primary"><i class="bi bi-chat-dots-fill"></i></button>
+        <input type="text" name="text" class="form-control me-2" placeholder="Напишіть коментар...">
+        <button type="submit" class="btn btn-outline-light"><i class="bi bi-arrow-return-right"></i></button>
       </form>
     </div>
-
   </div>
 </div>

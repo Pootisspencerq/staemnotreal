@@ -1,181 +1,213 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth import get_user_model
-from django.http import JsonResponse
-from .models import Post, Like, Comment, Repost, Vote
 from django.contrib import messages
+from django.http import JsonResponse
 from django.views.decorators.http import require_POST
-from django.db import models
 from django.db.models import Sum
+from django.contrib.auth import get_user_model
+from django.template.loader import render_to_string
+from .models import Post, Like, Comment, Repost, Vote
+import json
 User = get_user_model()
 
-
 @login_required
-def feed_view(request):
-    if request.method == "POST":
-        text = request.POST.get("text")
-        img = request.FILES.get("img")
-        video = request.FILES.get("video")
-        file = request.FILES.get("file")
-        link = request.POST.get("link")
+def edit_post(request, post_id):
+    post = get_object_or_404(Post, id=post_id, author=request.user)
 
-        if text or img or video or file or link:
-            Post.objects.create(
-                author=request.user,
-                text=text,
-                img=img,
-                video=video,
-                file=file,
-                link=link
-            )
+    if request.method == "POST":
+        text = request.POST.get("text", "")
+        link = request.POST.get("link", "")
+        file = request.FILES.get("file")
+
+        post.text = text
+        post.link = link
+        if file:
+            post.file = file
+        post.save()
+
+        # Якщо запит AJAX → повертаємо JSON
+        if request.headers.get("x-requested-with") == "XMLHttpRequest":
+            return JsonResponse({"success": True, "message": "Пост оновлено!"})
         return redirect("posts:feed")
 
-    posts = Post.objects.all().select_related("author").prefetch_related("comments", "likes")
-    for post in posts:
-        post.liked_by_user = request.user.is_authenticated and post.likes.filter(user=request.user).exists()
-    return render(request, "posts/feed.html", {"posts": posts})
+    return render(request, "posts/edit_post.html", {"post": post})
 
-
-@login_required
-def create_post(request):
-    if request.method == "POST":
-        text = request.POST.get("text")
-        img = request.FILES.get("img")
-        video = request.FILES.get("video")
-        file = request.FILES.get("file")
-        link = request.POST.get("link")
-
-        if text or img or video or file or link:
-            Post.objects.create(
-                author=request.user,
-                text=text,
-                img=img,
-                video=video,
-                file=file,
-                link=link
-            )
-        return redirect("posts:feed")
 
 
 @login_required
 @require_POST
 def toggle_like(request, post_id):
     post = get_object_or_404(Post, id=post_id)
-    like = Like.objects.filter(user=request.user, post=post).first()
-
-    if like:
+    like, created = Like.objects.get_or_create(user=request.user, post=post)
+    
+    if not created:
         like.delete()
         liked = False
     else:
-        Like.objects.create(user=request.user, post=post)
         liked = True
 
-    return JsonResponse({
-        "liked": liked,
-        "like_count": post.likes.count(),
-    })
+    like_count = post.likes.count()
+    return JsonResponse({'success': True, 'liked': liked, 'like_count': like_count})
 
-
-@require_POST
+# 📰 Головна стрічка
 @login_required
-def add_comment(request, post_id):
-    post = get_object_or_404(Post, id=post_id)
-    text = request.POST.get('text', '').strip()
-    if not text:
-        return JsonResponse({'error': 'Коментар не може бути порожнім'}, status=400)
+def feed_view(request):
+    if request.method == "POST":
+        text = request.POST.get("text")
+        file = request.FILES.get("file")
+        link = request.POST.get("link")
 
-    comment = Comment.objects.create(
-        post=post,
+        if text or file or link:
+            post = Post.objects.create(
+                author=request.user,
+                text=text,
+                file=file,
+                link=link
+            )
+            # якщо AJAX
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({"success": True, "post_id": post.id})
+        return redirect("posts:feed")
+
+    posts = Post.objects.select_related("author").prefetch_related("comments", "likes", "reposts", "votes")
+    for post in posts:
+        post.liked_by_user = post.likes.filter(user=request.user).exists()
+        post.vote_score = post.votes.aggregate(total=Sum('vote_value'))['total'] or 0
+
+    return render(request, "posts/feed.html", {"posts": posts})
+
+
+# ➕ Створення поста (окремо для AJAX)
+@login_required
+@require_POST
+def create_post(request):
+    text = request.POST.get("text")
+    file = request.FILES.get("file")
+    link = request.POST.get("link")
+
+    if not (text or file or link):
+        return JsonResponse({"success": False, "error": "Порожній пост"}, status=400)
+
+    post = Post.objects.create(
         author=request.user,
-        text=text
+        text=text,
+        file=file,
+        link=link
     )
 
-    # Аватар або стандартний
-    if hasattr(request.user, 'profile') and request.user.profile.avatar:
-        avatar_url = request.user.profile.avatar.url
+    # Повертаємо HTML готового поста для вставки
+    html = render_to_string("posts/_post_card.html", {"post": post, "user": request.user}, request=request)
+
+    return JsonResponse({"success": True, "post_html": html})
+
+
+# ❤️ Лайк / анлайк
+@login_required
+@require_POST
+def like_post(request, post_id):
+    post = get_object_or_404(Post, id=post_id)
+    liked, created = Like.objects.get_or_create(user=request.user, post=post)
+
+    if not created:
+        liked.delete()
+        post.like_count = max(0, post.likes.count())
+        return JsonResponse({'success': True, 'liked': False, 'like_count': post.like_count})
+
+    post.like_count = post.likes.count()
+    return JsonResponse({'success': True, 'liked': True, 'like_count': post.like_count})
+
+
+# 💬 Додати коментар
+@login_required
+@require_POST
+def add_comment(request, post_id):
+    post = get_object_or_404(Post, id=post_id)
+    data = json.loads(request.body)
+    text = data.get('text', '').strip()
+    if not text:
+        return JsonResponse({'success': False, 'error': 'Порожній коментар'}, status=400)
+    
+    comment = Comment.objects.create(post=post, author=request.user, text=text)
+    
+    # Правильна перевірка аватара
+    profile = getattr(request.user, 'profile', None)
+    if profile and profile.avatar and hasattr(profile.avatar, 'url'):
+        avatar_url = profile.avatar.url
     else:
         avatar_url = '/static/images/default-avatar.png'
 
     return JsonResponse({
+        'success': True,
         'comment_id': comment.id,
         'author': request.user.username,
         'text': comment.text,
-        'avatar_url': avatar_url,
-        'comment_count': post.comments.count(),
+        'avatar': avatar_url
     })
 
 
+# ❌ Видалення поста (AJAX)
 @login_required
-def edit_post(request, post_id):
-    post = get_object_or_404(Post, id=post_id, author=request.user)
-    if request.method == "POST":
-        text = request.POST.get("text")
-        if text:
-            post.text = text
-            post.save()
-            messages.success(request, "Пост оновлено")
-            return redirect("posts:feed")
-    return render(request, "posts/edit_post.html", {"post": post})
-
-
-@login_required
+@require_POST
 def delete_post(request, post_id):
     post = get_object_or_404(Post, id=post_id)
-    if request.user != post.author and not request.user.is_staff and not request.user.is_superuser:
-        messages.error(request, "Ви не маєте права видаляти цей пост")
-        return redirect("posts:feed")
 
-    if request.method == "POST":
-        post.delete()
-        messages.success(request, "Пост видалено")
-        return redirect("posts:feed")
+    if request.user != post.author and not request.user.is_staff:
+        return JsonResponse({'success': False, 'error': 'Недостатньо прав'}, status=403)
 
-    return render(request, "posts/delete_post.html", {"post": post})
+    post.delete()
+    return JsonResponse({'success': True})
 
 
+# ❌ Видалення коментаря (AJAX)
 @login_required
+@require_POST
 def delete_comment(request, comment_id):
     comment = get_object_or_404(Comment, id=comment_id)
-    if request.user != comment.author and not request.user.is_staff and not request.user.is_superuser:
-        messages.error(request, "Ви не маєте права видаляти цей коментар")
-        return redirect("posts:feed")
+    if request.user != comment.author and not request.user.is_staff:
+        return JsonResponse({'success': False, 'error': 'Недостатньо прав'}, status=403)
 
-    if request.method == "POST":
-        comment.delete()
-        messages.success(request, "Коментар видалено")
-        return redirect("posts:feed")
+    comment.delete()
+    return JsonResponse({'success': True})
 
-    return render(request, "posts/delete_comment.html", {"comment": comment})
+
+# 🔁 Репост
 @login_required
+@require_POST
 def repost_post(request, post_id):
     post = get_object_or_404(Post, id=post_id)
-    # Не дозволяємо репостити кілька разів
-    if not Repost.objects.filter(user=request.user, original_post=post).exists():
-        Repost.objects.create(user=request.user, original_post=post)
-        messages.success(request, "Пост репостнуто!")
-    else:
-        messages.info(request, "Ви вже репостили цей пост.")
-    return redirect("posts:feed")
+    already = Repost.objects.filter(user=request.user, original_post=post).exists()
 
+    if already:
+        return JsonResponse({'success': False, 'message': 'Ви вже репостили цей пост.'})
+
+    Repost.objects.create(user=request.user, original_post=post)
+    return JsonResponse({'success': True, 'message': 'Пост репостнуто!'})
+
+
+# 🔼⬇️ Голосування (up/down)
 @login_required
+@require_POST
 def vote_post(request, post_id, action):
-    if request.method != "POST":
-        return JsonResponse({'error': 'Invalid request'}, status=400)
-
     post = get_object_or_404(Post, id=post_id)
-    vote_value = 1 if action == 'up' else -1
+    value = 1 if action == 'up' else -1
 
-    # Create or update vote
-    vote, created = Vote.objects.update_or_create(
+    Vote.objects.update_or_create(
         user=request.user,
         post=post,
-        defaults={'vote_value': vote_value}
+        defaults={'vote_value': value}
     )
 
-    # Total score
     score = post.votes.aggregate(total=Sum('vote_value'))['total'] or 0
+    return JsonResponse({'success': True, 'score': score})
 
-    return JsonResponse({'score': score})
+
+
+# 📄 Деталі поста
+@login_required
 def post_detail(request, post_id):
     post = get_object_or_404(Post, id=post_id)
-    return render(request, "posts/post_detail.html", {"post": post})
+    post.liked_by_user = post.likes.filter(user=request.user).exists()
+    post.vote_score = post.votes.aggregate(total=Sum('vote_value'))['total'] or 0
+    comments = post.comments.select_related("author")
+
+    return render(request, "posts/post_detail.html", {"post": post, "comments": comments})
