@@ -55,3 +55,40 @@
   border-radius: 8px;
 }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.getElementById('create-post-form');
+  const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+
+    const formData = new FormData(form);
+    try {
+      const res = await fetch("{% url 'posts:create_post' %}", {
+        method: 'POST',
+        headers: { 'X-CSRFToken': csrftoken },
+        body: formData
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        // Вставляємо новий пост на початок стрічки
+        const container = document.querySelector('.container'); // або змінити на div де виводяться пости
+        const div = document.createElement('div');
+        div.innerHTML = data.post_html;
+        container.prepend(div.firstElementChild);
+
+        // Скидаємо форму
+        form.reset();
+      } else {
+        alert(data.error || 'Помилка при створенні поста');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Помилка при створенні поста');
+    }
+  });
+});
+</script>

@@ -7,7 +7,9 @@ from django.db.models import Sum
 from django.contrib.auth import get_user_model
 from django.template.loader import render_to_string
 from .models import Post, Like, Comment, Repost, Vote
+from itertools import chain
 import json
+
 User = get_user_model()
 
 @login_required
@@ -25,14 +27,11 @@ def edit_post(request, post_id):
             post.file = file
         post.save()
 
-        # Якщо запит AJAX → повертаємо JSON
         if request.headers.get("x-requested-with") == "XMLHttpRequest":
             return JsonResponse({"success": True, "message": "Пост оновлено!"})
         return redirect("posts:feed")
 
     return render(request, "posts/edit_post.html", {"post": post})
-
-
 
 @login_required
 @require_POST
@@ -64,18 +63,35 @@ def feed_view(request):
                 file=file,
                 link=link
             )
-            # якщо AJAX
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return JsonResponse({"success": True, "post_id": post.id})
         return redirect("posts:feed")
 
-    posts = Post.objects.select_related("author").prefetch_related("comments", "likes", "reposts", "votes")
-    for post in posts:
+    # Отримуємо оригінальні пости
+    posts_qs = Post.objects.select_related("author").prefetch_related("comments", "likes", "reposts", "votes").filter(is_public=True)
+    # Отримуємо репости
+    reposts_qs = Repost.objects.select_related('user', 'original_post__author').all()
+
+    # Конвертуємо репости в об'єкти постів з додатковими атрибутами
+    repost_posts = []
+    for r in reposts_qs:
+        p = r.original_post
+        p.reposted_by = r.user
+        p.repost_created_at = r.created_at
+        repost_posts.append(p)
+
+    # Об'єднуємо пости і репости хронологічно
+    all_posts = sorted(
+        chain(posts_qs, repost_posts),
+        key=lambda x: getattr(x, 'created_at', getattr(x, 'repost_created_at', None)),
+        reverse=True
+    )
+
+    for post in all_posts:
         post.liked_by_user = post.likes.filter(user=request.user).exists()
         post.vote_score = post.votes.aggregate(total=Sum('vote_value'))['total'] or 0
 
-    return render(request, "posts/feed.html", {"posts": posts})
-
+    return render(request, "posts/feed.html", {"posts": all_posts})
 
 # ➕ Створення поста (окремо для AJAX)
 @login_required
@@ -95,11 +111,8 @@ def create_post(request):
         link=link
     )
 
-    # Повертаємо HTML готового поста для вставки
     html = render_to_string("posts/_post_card.html", {"post": post, "user": request.user}, request=request)
-
     return JsonResponse({"success": True, "post_html": html})
-
 
 # ❤️ Лайк / анлайк
 @login_required
@@ -116,7 +129,6 @@ def like_post(request, post_id):
     post.like_count = post.likes.count()
     return JsonResponse({'success': True, 'liked': True, 'like_count': post.like_count})
 
-
 # 💬 Додати коментар
 @login_required
 @require_POST
@@ -129,7 +141,6 @@ def add_comment(request, post_id):
     
     comment = Comment.objects.create(post=post, author=request.user, text=text)
     
-    # Правильна перевірка аватара
     profile = getattr(request.user, 'profile', None)
     if profile and profile.avatar and hasattr(profile.avatar, 'url'):
         avatar_url = profile.avatar.url
@@ -144,7 +155,6 @@ def add_comment(request, post_id):
         'avatar': avatar_url
     })
 
-
 # ❌ Видалення поста (AJAX)
 @login_required
 @require_POST
@@ -157,7 +167,6 @@ def delete_post(request, post_id):
     post.delete()
     return JsonResponse({'success': True})
 
-
 # ❌ Видалення коментаря (AJAX)
 @login_required
 @require_POST
@@ -168,7 +177,6 @@ def delete_comment(request, comment_id):
 
     comment.delete()
     return JsonResponse({'success': True})
-
 
 # 🔁 Репост
 @login_required
@@ -182,7 +190,6 @@ def repost_post(request, post_id):
 
     Repost.objects.create(user=request.user, original_post=post)
     return JsonResponse({'success': True, 'message': 'Пост репостнуто!'})
-
 
 # 🔼⬇️ Голосування (up/down)
 @login_required
@@ -199,8 +206,6 @@ def vote_post(request, post_id, action):
 
     score = post.votes.aggregate(total=Sum('vote_value'))['total'] or 0
     return JsonResponse({'success': True, 'score': score})
-
-
 
 # 📄 Деталі поста
 @login_required

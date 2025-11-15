@@ -1,9 +1,8 @@
-# posts/models.py
 from django.db import models
 from django.conf import settings
-from django.utils import timezone
 
 User = settings.AUTH_USER_MODEL
+
 
 class Group(models.Model):
     name = models.CharField(max_length=200)
@@ -25,7 +24,6 @@ class ChatThread(models.Model):
 
 
 class Post(models.Model):
-    # зберігаємо твої існуючі поля для безпечного переходу
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='posts')
     text = models.TextField(null=True, blank=True)
     img = models.ImageField(upload_to='posts/images/', null=True, blank=True)
@@ -37,7 +35,7 @@ class Post(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
-    # Нові поля (мінімальні додавання) для уніфікації:
+    # Optional contextual fields
     group = models.ForeignKey(Group, null=True, blank=True, on_delete=models.CASCADE, related_name='posts')
     chat_thread = models.ForeignKey(ChatThread, null=True, blank=True, on_delete=models.CASCADE, related_name='messages')
     is_chat_message = models.BooleanField(default=False)
@@ -84,7 +82,7 @@ class PostMedia(models.Model):
     media_type = models.CharField(max_length=10, choices=MEDIA_TYPES)
     image = models.ImageField(upload_to='posts/media/images/', blank=True, null=True)
     file = models.FileField(upload_to='posts/media/files/', blank=True, null=True)
-    url = models.URLField(blank=True, null=True)  # for links
+    url = models.URLField(blank=True, null=True)
     order = models.PositiveSmallIntegerField(default=0)
 
     class Meta:
@@ -96,8 +94,8 @@ class PostMedia(models.Model):
 
 class PostImage(models.Model):
     """
-    Окрема модель для фото-галереї (B+C): дозволяє 1..N фотографій для посту.
-    (Ми дозволяємо одночасно PostImage + PostMedia.)
+    Окрема модель для фото-галереї: дозволяє 1..N фотографій для посту.
+    Можна одночасно використовувати PostImage та PostMedia.
     """
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='images')
     image = models.ImageField(upload_to='posts/gallery/')
@@ -150,7 +148,7 @@ class Repost(models.Model):
 class Vote(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="votes")
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="votes")
-    vote_value = models.IntegerField()  # 1 or -1
+    vote_value = models.IntegerField()  # 1 (upvote) or -1 (downvote)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

@@ -3,6 +3,8 @@
 
 {% block content %}
 <div class="container mt-5">
+
+    <!-- PROFILE HEADER -->
     <div class="d-flex align-items-center mb-4 gap-3">
         {% if profile.avatar %}
             <img src="{{ profile.avatar.url }}" alt="Аватар" class="img-thumbnail" width="150">
@@ -11,11 +13,14 @@
         {% endif %}
         <div>
             <h2>{{ profile_user.username }}</h2>
+
             {% if profile.bio %}
                 <p><strong>Про себе:</strong> {{ profile.bio }}</p>
             {% endif %}
+
             {% if profile.favorite_color %}
-                <p><strong>Улюблений колір:</strong> 
+                <p>
+                    <strong>Улюблений колір:</strong>
                     <span style="color: {{ profile.favorite_color }}">{{ profile.favorite_color }}</span>
                 </p>
             {% endif %}
@@ -23,67 +28,148 @@
             {% if profile_user == user %}
                 <a href="{% url 'accounts:edit_profile' %}" class="btn btn-secondary mt-2">Редагувати профіль</a>
             {% elif user.is_authenticated %}
-                <div class="mt-3">
-                    {% comment %} Кнопки дружби через модуль friends {% endcomment %}
+                <div class="mt-3" id="friendship-buttons">
+
                     {% if is_friend %}
-                        <form method="post" action="{% url 'friends:remove_friend' profile_user.id %}" style="display:inline;">
+                        <form method="post" action="{% url 'friends:remove_friend' profile_user.id %}" class="friend-form">
                             {% csrf_token %}
-                            <button class="btn btn-danger btn-sm">
+                            <button type="submit" class="btn btn-danger btn-sm friend-btn">
                                 <i class="bi bi-person-x me-1"></i> Видалити з друзів
                             </button>
                         </form>
+
                     {% elif sent_request %}
                         <span class="badge bg-warning text-dark">Запит надіслано</span>
+
                     {% elif received_request %}
-                        <form method="post" action="{% url 'friends:accept_friend_request' received_request.id %}" style="display:inline;">
+                        <form method="post" action="{% url 'friends:accept_friend_request' received_request.id %}" class="friend-form">
                             {% csrf_token %}
-                            <button class="btn btn-success btn-sm">
+                            <button type="submit" class="btn btn-success btn-sm friend-btn">
                                 <i class="bi bi-person-check me-1"></i> Прийняти запит
                             </button>
                         </form>
+
                     {% else %}
-                            <form method="post" action="{% url 'friends:send' profile_user.id %}">
-                                {% csrf_token %}
-                                <button class="btn btn-primary btn-sm">
-                                    <i class="bi bi-person-plus me-1"></i> Додати в друзі
-                                </button>
-                            </form>
+                        <form method="post" action="{% url 'friends:send' profile_user.id %}" class="friend-form">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-primary btn-sm friend-btn">
+                                <i class="bi bi-person-plus me-1"></i> Додати в друзі
+                            </button>
+                        </form>
                     {% endif %}
                 </div>
             {% endif %}
         </div>
     </div>
 
-    <!-- Tabs for Posts & Reposts -->
+    <!-- TABS (Bootstrap 5 FIXED) -->
     <ul class="nav nav-pills mb-3" id="profileTab" role="tablist">
+
         <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="posts-tab" data-bs-toggle="pill" data-bs-target="#posts" type="button" role="tab" aria-controls="posts" aria-selected="true">
+            <button class="nav-link active"
+                    id="posts-tab"
+                    data-bs-toggle="pill"
+                    data-bs-target="#posts"
+                    type="button"
+                    role="tab"
+                    aria-selected="true">
                 Пости
             </button>
         </li>
+
         <li class="nav-item" role="presentation">
-            <button class="nav-link" id="reposts-tab" data-bs-toggle="pill" data-bs-target="#reposts" type="button" role="tab" aria-controls="reposts" aria-selected="false">
+            <button class="nav-link"
+                    id="reposts-tab"
+                    data-bs-toggle="pill"
+                    data-bs-target="#reposts"
+                    type="button"
+                    role="tab"
+                    aria-selected="false">
                 Репости
             </button>
         </li>
+
     </ul>
 
+    <!-- TAB CONTENT -->
     <div class="tab-content" id="profileTabContent">
-        <div class="tab-pane fade show active" id="posts" role="tabpanel" aria-labelledby="posts-tab">
+
+        <!-- POSTS -->
+        <div class="tab-pane fade show active"
+             id="posts"
+             role="tabpanel"
+             aria-labelledby="posts-tab">
+
             {% for post in profile_user.posts.all %}
                 {% include "posts/post_card.html" with post=post %}
             {% empty %}
-                <p class="text-center text-muted"><i class="bi bi-hourglass-split"></i> Ще немає постів</p>
+                <p class="text-center text-muted">
+                    <i class="bi bi-hourglass-split"></i> Ще немає постів
+                </p>
             {% endfor %}
         </div>
 
-        <div class="tab-pane fade" id="reposts" role="tabpanel" aria-labelledby="reposts-tab">
-            {% for repost in profile_user.reposts.all %}
+        <!-- REPOSTS -->
+        <div class="tab-pane fade"
+             id="reposts"
+             role="tabpanel"
+             aria-labelledby="reposts-tab">
+
+            {% for repost in profile_user.reposted.all %}
                 {% include "posts/post_card.html" with post=repost.original_post %}
             {% empty %}
-                <p class="text-center text-muted"><i class="bi bi-hourglass-split"></i> Ще немає репостів</p>
+                <p class="text-center text-muted">
+                    <i class="bi bi-hourglass-split"></i> Ще немає репостів
+                </p>
             {% endfor %}
         </div>
+
     </div>
 </div>
+
+<!-- FRIEND BUTTON AJAX -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+  function getCookie(name) {
+    const match = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+    return match ? decodeURIComponent(match.pop()) : '';
+  }
+  const csrftoken = getCookie('csrftoken');
+
+  document.querySelectorAll('.friend-form').forEach(form => {
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+
+      const btn = form.querySelector('.friend-btn');
+      const url = form.action;
+
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'X-CSRFToken': csrftoken }
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          if (btn.classList.contains('btn-primary')) {
+            btn.outerHTML = '<span class="badge bg-warning text-dark">Запит надіслано</span>';
+          } else if (btn.classList.contains('btn-success')) {
+            btn.outerHTML = '<button class="btn btn-danger btn-sm friend-btn">Видалити з друзів</button>';
+          } else if (btn.classList.contains('btn-danger')) {
+            btn.outerHTML = '<button class="btn btn-primary btn-sm friend-btn">Додати в друзі</button>';
+          }
+        } else {
+          alert(data.error || 'Помилка');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Помилка при надсиланні запиту');
+      }
+    });
+  });
+
+});
+</script>
+
 {% endblock %}

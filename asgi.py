@@ -1,21 +1,21 @@
-# staemnotreal/asgi.py
 import os
-from django.core.asgi import get_asgi_application
-
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "staemnotreal.settings")
-
 from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.auth import AuthMiddlewareStack
+from django.core.asgi import get_asgi_application
+from django.urls import path
+from notifications.consumers import NotificationsConsumer
 
-import notifications.routing
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'settings')
 
-django_asgi_app = get_asgi_application()
+django_app = get_asgi_application()
+
+websocket_urlpatterns = [
+    path("ws/notifications/", NotificationsConsumer.as_asgi()),
+]
 
 application = ProtocolTypeRouter({
-    "http": django_asgi_app,
+    "http": django_app,
     "websocket": AuthMiddlewareStack(
-        URLRouter(
-            notifications.routing.websocket_urlpatterns
-        )
+        URLRouter(websocket_urlpatterns)
     ),
 })

@@ -11,14 +11,13 @@
   <!-- Створення поста -->
   {% include "posts/_post_form.html" %}
 
-  {% for post in posts %}
-    <div class="post-card bg-dark rounded shadow-sm p-3 mb-4 d-flex gap-3 align-items-start" id="post-{{ post.id }}">
-      {% include "posts/post_card.html" %}
-    </div>
-  {% empty %}
-    <p class="text-center text-muted">Ще немає постів</p>
-  {% endfor %}
-</div>
+{% for post in posts %}
+  <div class="post-card bg-dark rounded shadow-sm p-3 mb-4 d-flex gap-3 align-items-start" id="post-{{ post.id }}">
+    {% include "posts/post_card.html" with post=post %}
+  </div>
+{% empty %}
+  <p class="text-center text-muted">Ще немає постів</p>
+{% endfor %}
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {

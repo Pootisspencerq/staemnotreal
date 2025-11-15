@@ -2,7 +2,9 @@ from pathlib import Path
 import os
 
 # --- Базова папка проєкту ---
-BASE_DIR = Path(__file__).resolve().parent  # наприклад: C:\Users\sypen\Downloads\staemnotreal
+BASE_DIR = Path(__file__).resolve().parent
+
+  # наприклад: C:\Users\sypen\Downloads\staemnotreal
 
 # --- Безпека ---
 SECRET_KEY = 'django-insecure-test-key'
@@ -18,7 +20,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
+    
+    "channels",
     # Сторонні
     'rest_framework',
 
@@ -46,6 +49,7 @@ MIDDLEWARE = [
 # --- URLS & WSGI ---
 # Якщо структура стандартна, файли мають бути в папці "staemnotreal/"
 ROOT_URLCONF = 'urls'
+ASGI_APPLICATION = "asgi.application"
 WSGI_APPLICATION = 'wsgi.application'
 
 
@@ -69,6 +73,12 @@ TEMPLATES = [
         },
     },
 ]
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
+    },
+}
 
 # --- База даних ---
 DATABASES = {
