@@ -3,10 +3,11 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model, login, logout
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
-from django.db.models import Q
+from django.db.models import Sum
 from .forms import ProfileForm
 from .models import Profile
-from friends.models import FriendRequest, Friendship  # твій модуль друзів
+from friends.models import FriendRequest, Friendship
+from posts.models import Post
 
 User = get_user_model()
 
@@ -38,29 +39,45 @@ def logout_view(request):
 # -------------------
 # 🔹 Профіль користувача
 # -------------------
-@login_required
 def profile_view(request, username):
     profile_user = get_object_or_404(User, username=username)
     profile, _ = Profile.objects.get_or_create(user=profile_user)
 
-    # Перевірка дружби
-    is_friend = Friendship.objects.filter(
-        Q(user1=request.user, user2=profile_user) |
-        Q(user1=profile_user, user2=request.user)
-    ).exists()
+    # NORMAL POSTS (без reposts)
+    posts = Post.objects.filter(
+        author=profile_user,
+        shared_from__isnull=True
+    ).order_by("-created_at")
 
-    # Перевірка запитів на дружбу
-    sent_request = FriendRequest.objects.filter(from_user=request.user, to_user=profile_user).first()
-    received_request = FriendRequest.objects.filter(from_user=profile_user, to_user=request.user).first()
+    # REPOSTS
+    reposts = Post.objects.filter(
+        author=profile_user,
+        shared_from__isnull=False
+    ).order_by("-created_at")
 
-    context = {
+    # Add computed attributes for template
+    for post in posts:
+        post.liked_by_user = post.likes.filter(user=request.user).exists()
+        post.vote_score = post.votes.aggregate(total=Sum("vote_value")).get("total") or 0
+
+    for post in reposts:
+        post.liked_by_user = post.likes.filter(user=request.user).exists()
+        post.vote_score = post.votes.aggregate(total=Sum("vote_value")).get("total") or 0
+
+    # friend system (placeholder — you can fill later)
+    is_friend = False
+    sent_request = None
+    received_request = None
+
+    return render(request, "accounts/profile.html", {
         "profile_user": profile_user,
         "profile": profile,
+        "posts": posts,
+        "reposts": reposts,
         "is_friend": is_friend,
         "sent_request": sent_request,
         "received_request": received_request,
-    }
-    return render(request, "accounts/profile.html", context)
+    })
 
 
 # -------------------

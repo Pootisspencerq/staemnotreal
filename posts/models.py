@@ -26,16 +26,20 @@ class ChatThread(models.Model):
 class Post(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='posts')
     text = models.TextField(null=True, blank=True)
+
     img = models.ImageField(upload_to='posts/images/', null=True, blank=True)
     video = models.FileField(upload_to='posts/videos/', null=True, blank=True)
     file = models.FileField(upload_to='posts/files/', null=True, blank=True)
     link = models.URLField(null=True, blank=True)
+
+    # main repost mechanism
     shared_from = models.ForeignKey(
         'self', null=True, blank=True, on_delete=models.SET_NULL, related_name='shares'
     )
+
     created_at = models.DateTimeField(auto_now_add=True)
 
-    # Optional contextual fields
+    # context
     group = models.ForeignKey(Group, null=True, blank=True, on_delete=models.CASCADE, related_name='posts')
     chat_thread = models.ForeignKey(ChatThread, null=True, blank=True, on_delete=models.CASCADE, related_name='messages')
     is_chat_message = models.BooleanField(default=False)
@@ -59,18 +63,15 @@ class Post(models.Model):
 
     @property
     def repost_count(self):
-        return self.reposts.count()
+        return self.shares.count()
 
 
 class PostMedia(models.Model):
-    """
-    Універсальна модель для вкладень: image, video, file, link
-    Кожен запис прив'язаний до Post.
-    """
     MEDIA_IMAGE = 'image'
     MEDIA_VIDEO = 'video'
     MEDIA_FILE = 'file'
     MEDIA_LINK = 'link'
+
     MEDIA_TYPES = [
         (MEDIA_IMAGE, 'Image'),
         (MEDIA_VIDEO, 'Video'),
@@ -80,9 +81,11 @@ class PostMedia(models.Model):
 
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='media')
     media_type = models.CharField(max_length=10, choices=MEDIA_TYPES)
+
     image = models.ImageField(upload_to='posts/media/images/', blank=True, null=True)
     file = models.FileField(upload_to='posts/media/files/', blank=True, null=True)
     url = models.URLField(blank=True, null=True)
+
     order = models.PositiveSmallIntegerField(default=0)
 
     class Meta:
@@ -93,10 +96,6 @@ class PostMedia(models.Model):
 
 
 class PostImage(models.Model):
-    """
-    Окрема модель для фото-галереї: дозволяє 1..N фотографій для посту.
-    Можна одночасно використовувати PostImage та PostMedia.
-    """
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='images')
     image = models.ImageField(upload_to='posts/gallery/')
     order = models.PositiveSmallIntegerField(default=0)
@@ -131,18 +130,6 @@ class Comment(models.Model):
 
     def __str__(self):
         return f"Comment by {self.author} on Post {self.post.id}"
-
-
-class Repost(models.Model):
-    original_post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='reposts')
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reposted')
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        unique_together = ('user', 'original_post')
-
-    def __str__(self):
-        return f"{self.user} reposted {self.original_post.id}"
 
 
 class Vote(models.Model):

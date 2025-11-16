@@ -1,93 +1,115 @@
-<div class="post-card bg-dark rounded shadow-sm p-3 mb-4 d-flex gap-3 align-items-start" id="post-{{ post.id }}">
 {% load static %}
 {% load humanize %}
+{% with original=post.shared_from|default:post %}
 
-  <!-- Голосування -->
+
+
+<div class="post-card bg-dark rounded shadow-sm p-3 mb-4 d-flex gap-3" id="post-{{ post.id }}">
+
+  {% if post.shared_from %}
+    <div class="w-100 mb-2">
+      <small class="text-info">
+        <i class="bi bi-repeat"></i>
+        {{ post.author.username }} репостнув {{ post.created_at|naturaltime }}
+      </small>
+    </div>
+  {% endif %}
+
   <div class="vote-column text-center">
-    <button type="button" class="vote-btn btn btn-outline-light btn-sm d-block mb-1" data-post="{{ post.id }}" data-action="up" title="Upvote">▲</button>
-    <div class="vote-count text-light fw-bold" id="score-{{ post.id }}">{{ post.vote_score }}</div>
-    <button type="button" class="vote-btn btn btn-outline-light btn-sm d-block mt-1" data-post="{{ post.id }}" data-action="down" title="Downvote">▼</button>
+    <button type="button" class="vote-btn btn btn-outline-light btn-sm d-block mb-1"
+            data-post="{{ post.id }}" data-action="up">▲</button>
+
+    <div class="vote-count text-light fw-bold" id="score-{{ post.id }}">
+      {{ post.vote_score }}
+    </div>
+
+    <button type="button" class="vote-btn btn btn-outline-light btn-sm d-block mt-1"
+            data-post="{{ post.id }}" data-action="down">▼</button>
   </div>
 
   <div class="flex-grow-1">
-    <!-- Шапка поста -->
+
+    <!-- Шапка -->
     <div class="d-flex align-items-center mb-2">
       <div class="me-2">
-        {% if post.author.profile.avatar %}
-          <img src="{{ post.author.profile.avatar.url }}" class="rounded-circle border" style="width:42px;height:42px;object-fit:cover;" alt="avatar">
+        {% if original.author.profile.avatar %}
+          <img src="{{ original.author.profile.avatar.url }}" class="rounded-circle border"
+               style="width:42px;height:42px;object-fit:cover;">
         {% else %}
-          <img src="{% static 'images/default-avatar.png' %}" class="rounded-circle border" style="width:42px;height:42px;object-fit:cover;" alt="avatar">
+          <img src="{% static 'images/default-avatar.png' %}" class="rounded-circle border"
+               style="width:42px;height:42px;object-fit:cover;">
         {% endif %}
       </div>
       <div>
-        <a href="{% url 'accounts:profile' post.author.username %}" class="fw-semibold text-primary text-decoration-none">{{ post.author.username }}</a><br>
-        <small class="text-muted">{{ post.created_at|naturaltime }}</small>
+        <a href="{% url 'accounts:profile' original.author.username %}"
+           class="fw-semibold text-primary text-decoration-none">
+          {{ original.author.username }}
+        </a>
+        <br>
+        <small class="text-muted">
+          {{ original.created_at|naturaltime }}
+        </small>
       </div>
     </div>
 
     <!-- Контент поста -->
-    {% if post.text %}
-      <p class="text-light mb-2">{{ post.text|linebreaksbr }}</p>
+    {% if original.text %}
+      <p class="text-light mb-2">{{ original.text|linebreaksbr }}</p>
     {% endif %}
 
-    {% if post.file %}
-      {% with post.file.url|lower as url %}
-        {% if ".jpg" in url or ".png" in url or ".jpeg" in url or ".gif" in url %}
-          <img src="{{ post.file.url }}" class="img-fluid rounded mb-2">
+    {% if original.file %}
+      {% with original.file.url|lower as url %}
+        {% if ".jpg" in url or ".jpeg" in url or ".png" in url or ".gif" in url %}
+          <img src="{{ original.file.url }}" class="img-fluid rounded mb-2">
         {% elif ".mp4" in url or ".webm" in url %}
-          <video controls preload="metadata" class="w-100 rounded mb-2"><source src="{{ post.file.url }}"></video>
-        {% elif ".mp3" in url or ".wav" in url or ".ogg" in url %}
-          <audio controls preload="metadata" class="w-100 mb-2"><source src="{{ post.file.url }}"></audio>
+          <video controls class="w-100 rounded mb-2">
+            <source src="{{ original.file.url }}">
+          </video>
+        {% elif ".mp3" in url or ".wav" in url %}
+          <audio controls class="w-100 mb-2">
+            <source src="{{ original.file.url }}">
+          </audio>
         {% endif %}
       {% endwith %}
     {% endif %}
 
-    {% if post.link %}
-      <p><a href="{{ post.link }}" target="_blank" rel="noopener noreferrer">{{ post.link }}</a></p>
+    {% if original.link %}
+      <p><a href="{{ original.link }}" target="_blank">{{ original.link }}</a></p>
     {% endif %}
 
-    <!-- Дії: лайк, коментар, видалення, репост -->
+    <!-- Дії -->
     <div class="d-flex justify-content-between align-items-center mt-3">
+
       <div>
-        <button type="button" class="like-btn btn btn-sm btn-outline-light" data-post="{{ post.id }}">
-          <i class="bi {% if post.liked_by_user %}bi-heart-fill text-danger{% else %}bi-heart{% endif %}"></i>
-          <span class="like-count">{{ post.like_count }}</span>
+        <button type="button" class="like-btn btn btn-sm btn-outline-light"
+                data-post="{{ original.id }}">
+          <i class="bi {% if original.liked_by_user %}bi-heart-fill text-danger{% else %}bi-heart{% endif %}"></i>
+          <span class="like-count">{{ original.like_count }}</span>
         </button>
-        <span class="comment-count text-muted ms-2" data-count="{{ post.comment_count }}">{{ post.comment_count }} коментарів</span>
+
+        <span class="comment-count text-muted ms-2">
+          {{ original.comment_count }} коментарів
+        </span>
       </div>
+
       <div>
         {% if user == post.author %}
-          <button type="button" class="delete-post-btn btn btn-sm btn-outline-danger" data-post="{{ post.id }}"><i class="bi bi-trash"></i></button>
+          <button type="button" class="delete-post-btn btn btn-sm btn-outline-danger"
+                  data-post="{{ post.id }}">
+            <i class="bi bi-trash"></i>
+          </button>
         {% endif %}
-        <button type="button" class="repost-btn btn btn-sm btn-outline-info" data-post="{{ post.id }}"><i class="bi bi-share"></i></button>
+
+        {% if not post.shared_from %}
+          <button type="button" class="repost-btn btn btn-sm btn-outline-info"
+                  data-post="{{ post.id }}">
+            <i class="bi bi-share"></i>
+          </button>
+        {% endif %}
       </div>
     </div>
 
-    <!-- Коментарі -->
-    <div class="comments-block mt-3">
-      {% for comment in post.comments.all %}
-        <div class="comment d-flex align-items-center mb-2" id="comment-{{ comment.id }}">
-          {% if comment.author.profile.avatar %}
-            <img src="{{ comment.author.profile.avatar.url }}" class="rounded-circle me-2" style="width:30px;height:30px;object-fit:cover;" alt="avatar">
-          {% else %}
-            <img src="{% static 'images/default-avatar.png' %}" class="rounded-circle me-2" style="width:30px;height:30px;object-fit:cover;" alt="avatar">
-          {% endif %}
-          <div class="flex-grow-1">
-            <b>{{ comment.author.username }}</b>: {{ comment.text }}
-          </div>
-          {% if user == comment.author or user.is_staff %}
-            <button type="button" class="delete-comment-btn btn btn-sm btn-outline-danger ms-2" data-comment="{{ comment.id }}">✖</button>
-          {% endif %}
-        </div>
-      {% empty %}
-        <p class="text-muted small">Ще немає коментарів</p>
-      {% endfor %}
-
-      <form class="comment-form d-flex mt-2" data-post="{{ post.id }}">
-        {% csrf_token %}
-        <input type="text" name="text" class="form-control me-2" placeholder="Напишіть коментар...">
-        <button type="submit" class="btn btn-outline-light"><i class="bi bi-arrow-return-right"></i></button>
-      </form>
-    </div>
   </div>
 </div>
+
+{% endwith %}

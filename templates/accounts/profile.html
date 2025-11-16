@@ -100,13 +100,12 @@
              role="tabpanel"
              aria-labelledby="posts-tab">
 
-            {% for post in profile_user.posts.all %}
+            {% for post in posts %}
                 {% include "posts/post_card.html" with post=post %}
             {% empty %}
-                <p class="text-center text-muted">
-                    <i class="bi bi-hourglass-split"></i> Ще немає постів
-                </p>
+                <p class="text-center text-muted">Немає постів</p>
             {% endfor %}
+
         </div>
 
         <!-- REPOSTS -->
@@ -115,13 +114,13 @@
              role="tabpanel"
              aria-labelledby="reposts-tab">
 
-            {% for repost in profile_user.reposted.all %}
-                {% include "posts/post_card.html" with post=repost.original_post %}
+            {% for post in reposts %}
+                {% include "posts/post_card.html" with post=post %}
             {% empty %}
-                <p class="text-center text-muted">
-                    <i class="bi bi-hourglass-split"></i> Ще немає репостів
-                </p>
+                <p class="text-center text-muted">Немає репостів</p>
             {% endfor %}
+
+
         </div>
 
     </div>
