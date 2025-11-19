@@ -1,41 +1,30 @@
 {% load static %}
-
-<ul class="list-group list-group-flush">
-  {% if unread_notifications %}
-    {% for n in unread_notifications %}
-      <li class="list-group-item d-flex align-items-start justify-content-between">
+<ul class="list-group list-group-flush" id="notifications-list">
+  {% if notifications %}
+    {% for n in notifications %}
+      <li class="list-group-item d-flex align-items-start justify-content-between notification-item {% if not n.is_read %}fw-bold bg-light{% endif %}"
+          data-id="{{ n.pk }}">
         <div class="flex-fill">
           {% if n.actor %}
-            <strong>{{ n.actor.username }}</strong>:
+            <strong class="me-1">{{ n.actor.username }}</strong>
           {% endif %}
-          <a href="{{ n.get_absolute_url }}" class="text-decoration-none stretched-link">
+          <a href="{{ n.link|default:'#' }}" class="text-decoration-none stretched-link">
             {{ n.description|default:n.verb }}
           </a>
           <div class="small text-muted">{{ n.timestamp|timesince }} тому</div>
         </div>
-        <button
-          type="button"
-          class="btn btn-sm btn-outline-secondary ms-2 mark-read-btn"
-          data-id="{{ n.pk }}"
-          aria-label="Позначити як прочитане"
-        >
-          ✓
-        </button>
+
+        {% if not n.is_read %}
+          <button type="button" class="btn btn-sm btn-outline-secondary ms-2 mark-read-btn" data-id="{{ n.pk }}" aria-label="Mark read">✓</button>
+        {% endif %}
       </li>
     {% endfor %}
+
     <li class="list-group-item text-center small">
       <a href="{% url 'notifications:list' %}" class="me-2">Переглянути всі</a>
-      <button
-        id="mark-all-read-btn"
-        class="btn btn-link btn-sm p-0"
-        type="button"
-      >
-        Позначити всі як прочитані
-      </button>
+      <button id="mark-all-read-btn" class="btn btn-link btn-sm p-0" type="button">Позначити всі як прочитані</button>
     </li>
   {% else %}
-    <li class="list-group-item text-center text-muted small">
-      Немає нових сповіщень
-    </li>
+    <li class="list-group-item text-center text-muted small">Немає нових сповіщень</li>
   {% endif %}
 </ul>

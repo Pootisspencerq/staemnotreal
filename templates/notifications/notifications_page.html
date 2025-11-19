@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Сповіщення{% endblock %}
+
+{% block content %}
+<div class="container py-3">
+  <h1 class="mb-3">Сповіщення</h1>
+
+  <div id="notifications-container">
+    {% include "notifications/notifications_dropdown.html" %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+/* Client: WebSocket + AJAX + reconnect/backoff + UI update */
+(function () {
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie) {
+      const cookies = document.cookie.split(';');
+      for (let cookie of cookies) {
+        cookie = cookie.trim();
+        if (cookie.startsWith(name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+  const csrftoken = getCookie('csrftoken');
+
+  // ws connection + backoff
+  let ws;
+  let reconnectInterval = 1000;
+  const maxReconnect = 30000;
+
+  function wsUrl() {
+    const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+    return `${protocol}://${window.location.host}/ws/notifications/`;
+  }
+
+  function connectWS() {
+    try {
+      ws = new WebSocket(wsUrl());
+    } catch (e) {
+      scheduleReconnect();
+      return;
+    }
+
+    ws.onopen = () => {
+      reconnectInterval = 1000; // reset backoff
+      // optional ping
+      ws.send(JSON.stringify({type: 'hello'}));
+    };
+
+    ws.onmessage = (evt) => {
+      try {
+        const data = JSON.parse(evt.data);
+        if (!data || !data.id) return;
+        handleIncomingNotification(data);
+      } catch (err) {
+        console.error('Invalid WS message', err, evt.data);
+      }
+    };
+
+    ws.onclose = () => scheduleReconnect();
+    ws.onerror = () => { ws.close(); };
+  }
+
+  function scheduleReconnect() {
+    setTimeout(() => {
+      reconnectInterval = Math.min(reconnectInterval * 1.5, maxReconnect);
+      connectWS();
+    }, reconnectInterval + Math.random() * 400);
+  }
+
+  // AJAX helpers
+  function fetchJSON(path, opts={}) {
+    opts.credentials = 'same-origin';
+    if (!opts.headers) opts.headers = {};
+    return fetch(path, opts).then(r => r.json());
+  }
+
+  function updateBadge(count) {
+    const badge = document.getElementById('notifications-badge');
+    if (!badge) return;
+    badge.textContent = count > 0 ? count : '';
+    badge.style.display = count > 0 ? 'inline-block' : 'none';
+  }
+
+  function refreshUnreadCount() {
+    fetchJSON('/notifications/unread-count/').then(data => {
+      updateBadge(data.unread_count || 0);
+    }).catch(()=>{});
+  }
+
+  function loadDropdown() {
+    fetchJSON('/notifications/dropdown/').then(data => {
+      const el = document.getElementById('notifications-container') || document.getElementById('notifications-dropdown-content');
+      if (el && data.html) el.innerHTML = data.html;
+    }).catch(()=>{});
+  }
+
+  function markAsRead(id) {
+    fetchJSON(`/notifications/ajax/mark-as-read/${id}/`, {
+      method: 'POST',
+      headers: {'X-CSRFToken': csrftoken}
+    }).then(() => { refreshUnreadCount(); loadDropdown(); });
+  }
+
+  function markAll() {
+    fetchJSON('/notifications/mark-all/', {
+      method: 'POST',
+      headers: {'X-CSRFToken': csrftoken}
+    }).then(() => { refreshUnreadCount(); loadDropdown(); });
+  }
+
+  // handle DOM clicks for dynamic content
+  document.addEventListener('click', function (e) {
+    const target = e.target;
+    if (target.classList.contains('mark-read-btn')) {
+      const id = target.dataset.id;
+      if (id) markAsRead(id);
+    }
+    if (target.id === 'mark-all-read-btn') {
+      markAll();
+    }
+  });
+
+  // Handle incoming notification from websocket
+  function handleIncomingNotification(data) {
+    // Update badge
+    const badge = document.getElementById('notifications-badge');
+    const current = parseInt(badge.textContent || '0') || 0;
+    updateBadge(current + 1);
+
+    // Build DOM snippet consistent with our template
+    const list = document.getElementById('notifications-list');
+    if (!list) return;
+
+    const li = document.createElement('li');
+    li.className = 'list-group-item d-flex align-items-start justify-content-between notification-item fw-bold bg-light';
+    li.setAttribute('data-id', data.id);
+
+    const left = document.createElement('div');
+    left.className = 'flex-fill';
+
+    if (data.actor) {
+      const s = document.createElement('strong');
+      s.className = 'me-1';
+      s.textContent = data.actor;
+      left.appendChild(s);
+    }
+
+    const a = document.createElement('a');
+    a.href = data.link || '#';
+    a.className = 'text-decoration-none stretched-link';
+    a.textContent = data.description || data.verb || 'New notification';
+    left.appendChild(a);
+
+    const tm = document.createElement('div');
+    tm.className = 'small text-muted';
+    // Use browser time for now; server sent ISO timestamp
+    try {
+      const dt = new Date(data.timestamp);
+      tm.textContent = dt.toLocaleString();
+    } catch (e) {
+      tm.textContent = '';
+    }
+    left.appendChild(tm);
+
+    li.appendChild(left);
+
+    const btn = document.createElement('button');
+    btn.className = 'btn btn-sm btn-outline-secondary ms-2 mark-read-btn';
+    btn.setAttribute('data-id', data.id);
+    btn.setAttribute('type', 'button');
+    btn.textContent = '✓';
+    li.appendChild(btn);
+
+    // Insert at top
+    if (list.firstChild) list.insertBefore(li, list.firstChild);
+    else list.appendChild(li);
+
+    // Tiny highlight animation
+    li.style.transition = 'background-color 0.6s ease';
+    setTimeout(() => { li.classList.remove('bg-light'); li.classList.remove('fw-bold'); }, 2000);
+  }
+
+  // initial
+  refreshUnreadCount();
+  loadDropdown();
+  connectWS();
+  setInterval(refreshUnreadCount, 10000);
+})();
+</script>
+{% endblock %}

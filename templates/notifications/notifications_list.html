@@ -1,13 +1,12 @@
 {% load static %}
 <div class="nav-item dropdown">
-  <a class="nav-link position-relative" href="#" id="notificationsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+  <a class="nav-link position-relative" href="#" id="notificationsDropdown" data-bs-toggle="dropdown">
     <i class="bi bi-bell"></i>
     <span id="notifications-badge" class="badge rounded-pill bg-danger position-absolute"
           style="top: 0; right: 0; display: none;"></span>
   </a>
 
-  <div class="dropdown-menu dropdown-menu-end p-0 shadow" aria-labelledby="notificationsDropdown"
-       style="min-width: 320px;">
+  <div class="dropdown-menu dropdown-menu-end p-0 shadow" style="min-width: 320px;">
     <div id="notifications-dropdown-content" class="p-0">
       <div class="p-3 text-center text-muted small">Завантаження...</div>
     </div>
@@ -16,10 +15,10 @@
 
 <script>
 (function () {
-  // --- Отримання CSRF токена ---
+
   function getCookie(name) {
     let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
+    if (document.cookie) {
       const cookies = document.cookie.split(';');
       for (let cookie of cookies) {
         cookie = cookie.trim();
@@ -31,73 +30,58 @@
     }
     return cookieValue;
   }
+
   const csrftoken = getCookie('csrftoken');
 
-  // --- Оновлення кількості непрочитаних ---
   function updateCount() {
-    fetch('/notifications/unread-count/', { credentials: 'same-origin' })
+    fetch('/notifications/unread-count/', {credentials: 'same-origin'})
       .then(r => r.json())
       .then(data => {
         const badge = document.getElementById('notifications-badge');
-        if (!badge) return;
         const count = data.unread_count || 0;
         badge.textContent = count > 0 ? count : '';
         badge.style.display = count > 0 ? 'inline-block' : 'none';
       });
   }
 
-  // --- Завантаження HTML для дропдауну ---
   function loadDropdown() {
-    fetch('/notifications/dropdown/', { credentials: 'same-origin' })
+    fetch('/notifications/dropdown/', {credentials: 'same-origin'})
       .then(r => r.json())
       .then(data => {
         document.getElementById('notifications-dropdown-content').innerHTML = data.html;
       });
   }
 
-  // --- Позначення одного сповіщення прочитаним ---
   function markAsRead(id) {
-    fetch(`/notifications/mark-as-read/${id}/`, {  // ✅ виправлено (було ajax/mark-as-read)
+    fetch(`/notifications/mark-as-read/${id}/`, {
       method: 'POST',
-      headers: {'X-CSRFToken': csrftoken, 'Accept': 'application/json'}
+      headers: {'X-CSRFToken': csrftoken}
     })
-    .then(r => r.json())
-    .then(() => {
-      updateCount();
-      loadDropdown();
-    });
+    .then(() => { updateCount(); loadDropdown(); });
   }
 
-  // --- Позначити всі прочитаними ---
   function markAllAsRead() {
     fetch('/notifications/mark-all/', {
       method: 'POST',
-      headers: {'X-CSRFToken': csrftoken, 'Accept': 'application/json'}
+      headers: {'X-CSRFToken': csrftoken}
     })
-    .then(r => r.json())
-    .then(() => {
-      updateCount();
-      loadDropdown();
-    });
+    .then(() => { updateCount(); loadDropdown(); });
   }
 
-  // --- Події кнопок ---
   document.addEventListener('click', function (e) {
     if (e.target.classList.contains('mark-read-btn')) {
-      const id = e.target.dataset.id;
-      if (id) markAsRead(id);
+      markAsRead(e.target.dataset.id);
     }
     if (e.target.id === 'mark-all-read-btn') {
       markAllAsRead();
     }
   });
 
-  // --- Завантаження при відкритті ---
   const dropdown = document.getElementById('notificationsDropdown');
   if (dropdown) dropdown.addEventListener('show.bs.dropdown', loadDropdown);
 
-  // --- Початкове оновлення і автооновлення ---
   updateCount();
   setInterval(updateCount, 10000);
+
 })();
 </script>

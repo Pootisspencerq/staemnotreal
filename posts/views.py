@@ -95,9 +95,9 @@ def feed_view(request):
 @login_required
 @require_POST
 def create_post(request):
-    text = request.POST.get("text")
+    text = request.POST.get("text", "")
     file = request.FILES.get("file")
-    link = request.POST.get("link")
+    link = request.POST.get("link", "")
 
     if not (text or file or link):
         return JsonResponse({"success": False, "error": "Порожній пост"}, status=400)
@@ -109,8 +109,11 @@ def create_post(request):
         link=link
     )
 
-    html = render_to_string("posts/_post_card.html", {"post": post, "user": request.user}, request=request)
+    # Тимчасово простий HTML для перевірки
+    html = f"<div class='post-card mb-3 p-3 border rounded bg-dark text-white'>{post.text}</div>"
+
     return JsonResponse({"success": True, "post_html": html})
+
 
 
 # 💬 Коментар

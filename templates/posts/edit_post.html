@@ -5,14 +5,77 @@
 
 {% block content %}
 <div class="container py-4">
-  <h2 class="text-light mb-3">Редагувати пост</h2>
+  <h2 class="text-light mb-4">
+    <i class="bi bi-pencil-square"></i> Редагувати пост
+  </h2>
 
   <form method="post" enctype="multipart/form-data" class="bg-dark p-4 rounded shadow-sm">
+
     {% csrf_token %}
-    <textarea name="text" rows="3" class="form-control mb-2">{{ post.text }}</textarea>
-    <input type="url" name="link" value="{{ post.link }}" class="form-control mb-2" placeholder="Посилання (необов'язково)">
-    <input type="file" name="file" class="form-control mb-3">
-    <button type="submit" class="btn btn-primary w-100">💾 Зберегти</button>
+
+    <!-- Помилки -->
+    {% if form.errors %}
+      <div class="alert alert-danger">
+        <ul class="mb-0">
+          {% for field, errors in form.errors.items %}
+            {% for error in errors %}
+              <li>{{ error }}</li>
+            {% endfor %}
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
+    <!-- Текст -->
+    <label class="text-light mb-1">Текст</label>
+    <textarea name="text" rows="4" class="form-control mb-3"
+              placeholder="Ваш текст...">{{ post.text|escape }}</textarea>
+
+    <!-- Посилання -->
+    <label class="text-light mb-1">Посилання</label>
+    <input type="url" name="link" value="{{ post.link }}" class="form-control mb-3"
+           placeholder="https://example.com">
+
+    <!-- Попередній файл -->
+    {% if post.file %}
+      <div class="mb-3">
+        <label class="text-light">Поточний файл:</label><br>
+
+{% with url=post.file.url|lower %}
+  {% if ".jpg" in url or ".jpeg" in url or ".png" in url or ".gif" in url %}
+    <img src="{{ post.file.url }}" class="img-fluid rounded" style="max-height:200px;">
+
+  {% elif ".mp4" in url or ".webm" in url %}
+    <video controls class="w-100 rounded">
+      <source src="{{ post.file.url }}">
+    </video>
+
+  {% elif ".mp3" in url or ".wav" in url %}
+    <audio controls class="w-100">
+      <source src="{{ post.file.url }}">
+    </audio>
+
+  {% else %}
+    <a href="{{ post.file.url }}" target="_blank" class="text-info">Завантажити файл</a>
+  {% endif %}
+{% endwith %}
+
+    <!-- Новий файл -->
+    <label class="text-light mb-1">Замінити файл</label>
+    <input type="file" name="file" class="form-control mb-4">
+
+    <!-- Кнопки -->
+    <div class="d-flex justify-content-between">
+    <a href="{% url 'posts:post_detail' post.id %}" class="btn btn-outline-light">
+      <i class="bi bi-x-lg"></i> Скасувати
+    </a>
+
+    <button type="submit" class="btn btn-primary">
+      <i class="bi bi-save"></i> Зберегти зміни
+    </button>
+
+    </div>
+
   </form>
 </div>
 {% endblock %}

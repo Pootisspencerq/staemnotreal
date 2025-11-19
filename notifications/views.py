@@ -1,11 +1,12 @@
-# staemnotreal/notifications/views.py
+# notifications/views.py
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Notification
 from django.views import View
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseForbidden
 from django.template.loader import render_to_string
 from django.views.decorators.http import require_POST
+
+from .models import Notification
 
 
 class MarkAsReadView(View):
@@ -17,46 +18,19 @@ class MarkAsReadView(View):
 
 
 @login_required
-def ajax_list(request):
-    unread_count = Notification.objects.filter(recipient=request.user, is_read=False).count()
-    return JsonResponse({'unread_count': unread_count})
-
-
-@login_required
-def mark_read(request):
-    """Позначає всі сповіщення як прочитані"""
-    Notification.objects.filter(recipient=request.user, is_read=False).update(is_read=True)
-    return JsonResponse({'status': 'ok'})
-
-
-@login_required
-def notification_list(request):
+def notification_page(request):
+    """
+    Full page showing user's notifications (useable via /notifications/).
+    """
     notifications = Notification.objects.filter(recipient=request.user).order_by('-timestamp')
-    return render(request, 'notifications/notifications_list.html', {
-        'notifications': notifications
-    })
-
-
-@login_required
-@require_POST
-def ajax_mark_as_read(request, pk):
-    """AJAX: помітити конкретне сповіщення як прочитане"""
-    notif = get_object_or_404(Notification, pk=pk, recipient=request.user)
-    notif.is_read = True
-    notif.save()
-    return JsonResponse({'ok': True, 'pk': pk})
-
-
-@login_required
-def ajax_unread_count(request):
-    """AJAX: повернути кількість непрочитаних"""
-    count = Notification.objects.filter(recipient=request.user, is_read=False).count()
-    return JsonResponse({'unread_count': count})
+    return render(request, 'notifications/notifications_page.html', {'notifications': notifications})
 
 
 @login_required
 def ajax_dropdown(request):
-    """AJAX: повернути HTML для випадаючого списку сповіщень"""
+    """
+    Return HTML fragment for dropdown (latest 10).
+    """
     notifications = Notification.objects.filter(recipient=request.user).order_by('-timestamp')[:10]
     html = render_to_string(
         'notifications/notifications_dropdown.html',
@@ -64,3 +38,25 @@ def ajax_dropdown(request):
         request=request
     )
     return JsonResponse({'html': html})
+
+
+@login_required
+def ajax_unread_count(request):
+    count = Notification.objects.filter(recipient=request.user, is_read=False).count()
+    return JsonResponse({'unread_count': count})
+
+
+@login_required
+@require_POST
+def ajax_mark_as_read(request, pk):
+    notif = get_object_or_404(Notification, pk=pk, recipient=request.user)
+    notif.is_read = True
+    notif.save()
+    return JsonResponse({'ok': True, 'pk': pk})
+
+
+@login_required
+@require_POST
+def ajax_mark_all_read(request):
+    Notification.objects.filter(recipient=request.user, is_read=False).update(is_read=True)
+    return JsonResponse({'ok': True})

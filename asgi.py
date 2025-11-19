@@ -1,21 +1,22 @@
 import os
+import django
 from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.auth import AuthMiddlewareStack
-from django.core.asgi import get_asgi_application
-from django.urls import path
-from notifications.consumers import NotificationsConsumer
-
+from django.core.asgi import get_asgi_application 
+# 1️⃣ Set Django settings module before anything else
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'settings')
+django.setup()  # ✅ initialize apps registry
 
-django_app = get_asgi_application()
+# 2️⃣ Import your routing AFTER Django is ready
+from notifications.routing import websocket_urlpatterns as notif_ws
+from chat.routing import websocket_urlpatterns as chat_ws
 
-websocket_urlpatterns = [
-    path("ws/notifications/", NotificationsConsumer.as_asgi()),
-]
-
+# 3️⃣ Define ASGI application
 application = ProtocolTypeRouter({
-    "http": django_app,
+    "http": get_asgi_application(),  # optional, if you want HTTP to pass through
     "websocket": AuthMiddlewareStack(
-        URLRouter(websocket_urlpatterns)
+        URLRouter(
+            notif_ws + chat_ws
+        )
     ),
 })

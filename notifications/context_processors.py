@@ -14,17 +14,13 @@ def unread_notifications(request):
         return {"unread_count": 0, "latest_notifications": []}
 
     qs = request.user.notifications.all().order_by("-timestamp")
-
-    latest = []
-    for n in qs[:5]:
-        latest.append({
-            "id": n.id,
-            "verb": getattr(n, "verb", str(n)),
-            "link": getattr(n, "link", "#"),
-            "timestamp": n.timestamp,
-            "is_read": n.is_read
-        })
+    latest = [{
+        "id": n.id,
+        "verb": n.verb,
+        "link": n.link or "#",
+        "timestamp": n.timestamp,
+        "is_read": n.is_read
+    } for n in qs[:5]]
 
     unread_count = request.user.notifications.filter(is_read=False).count()
-
     return {"unread_count": unread_count, "latest_notifications": latest}

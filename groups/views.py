@@ -3,7 +3,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import Group, Membership, GroupPost
 from .forms import GroupForm, GroupPostForm
-
+from django.template.loader import render_to_string
+from django.http import JsonResponse
 
 @login_required
 def group_list(request):
@@ -32,19 +33,28 @@ def group_detail(request, pk):
 
 @login_required
 def create_group(request):
+    print("⚡ USING CORRECT create_group FROM GROUPS.VIEWS ⚡")
+
     if request.method == "POST":
         form = GroupForm(request.POST)
-    if form.is_valid():
-        group = form.save(commit=False)
-        group.creator = request.user
-        group.owner = request.user
-        group.save()
-        Membership.objects.create(user=request.user, group=group, is_moderator=False)
-        messages.success(request, "Групу створено!")
-        return redirect("groups:detail", pk=group.pk)
+        if form.is_valid():
+            group = form.save(commit=False)
+            group.creator = request.user
+            group.owner = request.user
+            group.save()
+
+            Membership.objects.create(
+                user=request.user,
+                group=group,
+                is_moderator=False
+            )
+
+            messages.success(request, "Групу створено!")
+            return redirect("groups:detail", pk=group.pk)
 
     else:
         form = GroupForm()
+
     return render(request, "groups/group_form.html", {"form": form})
 
 
@@ -64,8 +74,10 @@ def leave_group(request, pk):
     return redirect("groups:list")
 
 
+@login_required
 def create_post(request, pk):
     group = get_object_or_404(Group, pk=pk)
+
     if request.method == "POST":
         form = GroupPostForm(request.POST, request.FILES)
         if form.is_valid():
@@ -73,9 +85,19 @@ def create_post(request, pk):
             post.group = group
             post.author = request.user
             post.save()
-            return redirect("groups:detail", pk=group.id)
-    else:
-        form = GroupPostForm()
+
+            # 🔥 ТУТ ВАЖЛИВО: рендеримо ТАКИЙ ЖЕ пост, як у стрічці
+            html = render_to_string(
+                "components/post_card.html",   # або твій шлях
+                {"post": post, "user": request.user}
+            )
+
+            return JsonResponse({"success": True, "post_html": html})
+
+        return JsonResponse({"success": False, "errors": form.errors})
+
+    # Якщо GET → стара форма
+    form = GroupPostForm()
     return render(request, "groups/group_post_form.html", {"form": form, "group": group})
 
 

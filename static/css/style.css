@@ -26,17 +26,18 @@ html, body {
   padding: 0;
 }
 
-/* Scrollbars */
-::-webkit-scrollbar {
-  width: 10px;
+/* FIX: fixed-top navbar spacing */
+body {
+  padding-top: 70px !important;
 }
+
+/* Scrollbars */
+::-webkit-scrollbar { width: 10px; }
 ::-webkit-scrollbar-thumb {
   background: #2a2a2d;
   border-radius: 5px;
 }
-::-webkit-scrollbar-thumb:hover {
-  background: #3a3a3d;
-}
+::-webkit-scrollbar-thumb:hover { background: #3a3a3d; }
 
 /* Navbar */
 .custom-navbar {
@@ -46,7 +47,6 @@ html, body {
 
 .navbar-logo {
   width: 40px;
-  height: auto;
   border-radius: 8px;
 }
 
@@ -60,7 +60,6 @@ html, body {
   color: #fff !important;
   transition: color 0.2s ease;
 }
-
 .navbar .nav-link:hover {
   color: var(--accent) !important;
 }
@@ -93,12 +92,9 @@ html, body {
   color: var(--text);
   transition: transform 0.1s ease;
 }
+.post-card:hover { transform: scale(1.01); }
 
-.post-card:hover {
-  transform: scale(1.01);
-}
-
-/* Votes column */
+/* Votes */
 .post-votes {
   width: 50px;
   background: #1a1a1c;
@@ -108,7 +104,6 @@ html, body {
   justify-content: center;
   padding: 0.5rem 0;
 }
-
 .post-votes button {
   background: transparent;
   border: none;
@@ -118,28 +113,20 @@ html, body {
   transition: color 0.2s ease;
   margin: 0.2rem 0;
 }
+.post-votes button:hover { color: var(--accent); }
+.post-votes .vote-count { font-weight: 700; }
 
-.post-votes button:hover {
-  color: var(--accent);
-}
-
-.post-votes .vote-count {
-  font-weight: 700;
-}
-
-/* Post content */
+/* Content */
 .post-content {
   flex: 1;
   padding: 1rem;
 }
-
 .post-content .post-header {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 0.5rem;
 }
-
 .post-content .avatar {
   width: 40px;
   height: 40px;
@@ -149,10 +136,7 @@ html, body {
   background: url("/static/images/default-avatar.png") center/cover no-repeat;
 }
 
-.post-content .author {
-  font-weight: 700;
-}
-
+.post-content .author { font-weight: 700; }
 .post-content .meta {
   color: var(--muted);
   font-size: var(--small-font);
@@ -167,7 +151,6 @@ html, body {
 .post-content video,
 .post-content audio {
   max-width: 100%;
-  height: auto;
   margin-top: 0.5rem;
   border-radius: 6px;
 }
@@ -178,15 +161,13 @@ html, body {
   text-decoration: underline;
 }
 
-/* Post actions */
+/* Actions */
 .post-actions {
   display: flex;
   justify-content: space-between;
-  align-items: center;
   margin-top: 0.75rem;
   font-size: var(--small-font);
 }
-
 .post-actions button {
   background: transparent;
   border: none;
@@ -197,10 +178,7 @@ html, body {
   gap: 0.3rem;
   transition: color 0.2s ease;
 }
-
-.post-actions button:hover {
-  color: var(--accent);
-}
+.post-actions button:hover { color: var(--accent); }
 
 /* === COMMENTS === */
 .comments-block {
@@ -211,18 +189,16 @@ html, body {
 
 .comment {
   display: flex;
-  align-items: flex-start;
   gap: 0.5rem;
   margin-bottom: 0.5rem;
 }
-
 .comment .avatar-comment {
   width: 30px;
   height: 30px;
   border-radius: 50%;
   object-fit: cover;
-  border: 1px solid rgba(255, 255, 255, 0.04);
   background: url("/static/images/default-avatar.png") center/cover no-repeat;
+  border: 1px solid rgba(255, 255, 255, 0.04);
 }
 
 .comment .comment-text {
@@ -233,7 +209,6 @@ html, body {
 
 .comment .delete-comment {
   color: var(--danger);
-  font-size: 1rem;
   cursor: pointer;
 }
 
@@ -243,36 +218,38 @@ html, body {
   display: flex;
   gap: 0.5rem;
 }
-
 .comment-form input {
   flex: 1;
   padding: 0.5rem;
   border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
   background: #111;
   color: var(--text);
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
-
 .comment-form input::placeholder {
   color: var(--muted);
 }
-
 .comment-form button {
   padding: 0.5rem 0.8rem;
   border-radius: 6px;
   background: var(--accent);
   color: #fff;
   border: none;
-  cursor: pointer;
-  transition: background 0.2s ease;
 }
-
 .comment-form button:hover {
   background: var(--accent-hover);
 }
 
-/* === BUTTONS (GLOBAL) === */
-.btn, .form-control, .dropdown-menu, .list-group-item, .card, .alert, input, textarea, select {
+/* === BUTTONS GLOBAL === */
+.btn,
+.form-control,
+.dropdown-menu,
+.list-group-item,
+.card,
+.alert,
+input:not([type="file"]),
+textarea,
+select {
   background-color: var(--card) !important;
   color: var(--text) !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
@@ -280,114 +257,88 @@ html, body {
 
 .btn-primary {
   background: var(--accent) !important;
-  border: none;
-  color: white !important;
   border-radius: 8px;
-  padding: 0.5rem 1rem;
-  transition: 0.2s ease;
 }
-
-.btn-primary:hover {
-  background: var(--accent-hover) !important;
-}
+.btn-primary:hover { background: var(--accent-hover) !important; }
 
 .btn-danger {
   background: var(--danger) !important;
-  color: white !important;
-  border: none;
   border-radius: 8px;
 }
+.btn-danger:hover { filter: brightness(1.1); }
 
-.btn-danger:hover {
-  filter: brightness(1.1);
-}
-
-/* === Dropdown fix === */
+/* === Dropdown === */
 .dropdown-menu {
-  background-color: #1b1b1d !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  color: var(--text) !important;
+  background: var(--card) !important;
   border-radius: var(--radius);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-}
-
-.dropdown-item {
-  color: var(--text) !important;
-  transition: background 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
 }
 
 .dropdown-item:hover {
-  background-color: rgba(255, 255, 255, 0.08) !important;
+  background-color: rgba(255,255,255,0.08) !important;
 }
 
-.dropdown-divider {
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-/* === Input focus === */
+/* Inputs */
 input:focus, textarea:focus, select:focus {
   outline: none;
   border-color: var(--accent) !important;
   box-shadow: 0 0 4px var(--accent);
 }
 
-/* === Responsive === */
-@media (max-width: 768px) {
-  .post-card {
-    flex-direction: column;
-  }
+/* Fix file input */
+input[type="file"] {
+  color: var(--text);
+  background-color: var(--card);
+  border-radius: 6px;
+  padding: 0.4rem;
+  cursor: pointer;
+}
 
+input[type="file"]::file-selector-button {
+  background: var(--accent);
+  color: #fff;
+  border-radius: 6px;
+  padding: 0.4rem 0.8rem;
+  cursor: pointer;
+}
+input[type="file"]::file-selector-button:hover {
+  background: var(--accent-hover);
+}
+
+/* Firefox */
+@supports selector(::-moz-file-upload-button) {
+  input[type="file"]::-moz-file-upload-button {
+    background: var(--accent);
+    color: #fff;
+    border-radius: 6px;
+    padding: 0.4rem 0.8rem;
+  }
+  input[type="file"]::-moz-file-upload-button:hover {
+    background: var(--accent-hover);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .post-card { flex-direction: column; }
   .post-votes {
     flex-direction: row;
     width: 100%;
-    justify-content: flex-start;
     padding: 0.5rem;
+    justify-content: flex-start;
   }
-
   .post-votes button {
     font-size: 1.2rem;
     margin-right: 0.5rem;
   }
 }
 
-/* === Fix file input (Темна кнопка вибору файлу) === */
-input[type="file"] {
-  color: var(--text);
-  background-color: var(--card);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 6px;
-  padding: 0.4rem;
-  cursor: pointer;
+/* Create post block */
+.post-create {
+  background: var(--card) !important;
+  border-radius: 10px;
+  padding: 15px;
 }
-
-/* При наведенні */
-input[type="file"]::file-selector-button {
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  padding: 0.4rem 0.8rem;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background 0.2s ease;
-}
-
-/* Hover ефект */
-input[type="file"]::file-selector-button:hover {
-  background: var(--accent-hover);
-}
-
-/* Firefox підтримка */
-@supports selector(::-moz-file-upload-button) {
-  input[type="file"]::-moz-file-upload-button {
-    background: var(--accent);
-    color: #fff;
-    border: none;
-    padding: 0.4rem 0.8rem;
-    border-radius: 6px;
-    cursor: pointer;
-  }
-
-  input[type="file"]::-moz-file-upload-button:hover {
-    background: var(--accent-hover);
-  }
+.post-create textarea::placeholder {
+  color: #ccc !important;
 }
