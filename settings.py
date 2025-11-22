@@ -20,20 +20,25 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    
+
     "channels",
+
     # Сторонні
     'rest_framework',
 
     # Локальні (твої)
     'groups',
     'chat',
-    'notifications',
     'accounts',
     'posts',
-    'django.contrib.humanize',
     'friends',
+
+    'django.contrib.humanize',
+
+    # 🔥 Only this — correct version!
+    'notifications.apps.NotificationsConfig',
 ]
+
 
 # --- Middleware ---
 MIDDLEWARE = [

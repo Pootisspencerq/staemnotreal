@@ -137,7 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const csrftoken = getCookie('csrftoken');
 
   document.querySelectorAll('.friend-form').forEach(form => {
-    form.addEventListener('submit', async e => {
+    form?.addEventListener('submit', async e => {
       e.preventDefault();
 
       const btn = form.querySelector('.friend-btn');

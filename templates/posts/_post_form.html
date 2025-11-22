@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   /* ===================== SUBMIT FORM ======================== */
-  form.addEventListener('submit', async e => {
+  form?.addEventListener('submit', async e => {
     e.preventDefault();
 
     const formData = new FormData(form);
