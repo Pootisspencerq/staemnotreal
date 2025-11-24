@@ -12,230 +12,47 @@
   <form method="post" enctype="multipart/form-data" class="mb-4">
       {% csrf_token %}
       {% include "posts/_post_form.html" %}
-      
   </form>
 
-{% for post in posts %}
-    <div class="card bg-dark text-light mb-4 border-secondary p-3">
+  <div id="posts-container">
+    {% for post in page_obj %}
         {% include "posts/post_card.html" with post=post %}
+    {% empty %}
+        <p class="text-muted">Поки що немає постів.</p>
+    {% endfor %}
+  </div>
 
-          <!-- Блок коментарів -->
-          <div class="comments-block mt-3">
-
-              <!-- Лічильник -->
-              <div class="text-muted mb-2 comment-count" 
-                   data-count="{{ post.comments.count }}">
-                    {{ post.comments.count }} коментарів
-              </div>
-
-              <!-- Список коментарів -->
-              {% for c in post.comments.all %}
-              <div class="comment d-flex align-items-center mb-2" id="comment-{{ c.id }}">
-                  {% if c.author.profile and c.author.profile.avatar %}
-                      <img src="{{ c.author.profile.avatar.url }}"
-                           class="rounded-circle me-2"
-                           style="width:30px;height:30px;object-fit:cover;">
-                  {% else %}
-                      <img src="{% static 'images/default-avatar.png' %}"
-                           class="rounded-circle me-2"
-                           style="width:30px;height:30px;object-fit:cover;">
-                  {% endif %}
-                  <div class="flex-grow-1">
-                      <b>{{ c.author.username }}</b>: {{ c.text }}
-                  </div>
-
-                  {% if request.user == c.author %}
-                  <button type="button" class="delete-comment-btn btn btn-sm btn-outline-danger ms-2"
-                          data-comment="{{ c.id }}">✖</button>
-                  {% endif %}
-              </div>
-              {% endfor %}
-
-              <!-- Форма коментаря -->
-              <form class="comment-form mt-3" data-post="{{ post.id }}">
-                  <input type="text" name="text" class="form-control mb-2"
-                         placeholder="Ваш коментар...">
-                  <button class="btn btn-sm btn-outline-info">Коментувати</button>
-              </form>
-
-          </div>
-
+  <div id="loader" class="text-center my-3" style="display:none;">
+      <div class="spinner-border text-light" role="status">
+          <span class="sr-only">Loading...</span>
       </div>
+  </div>
+</div>
 
-  {% empty %}
-      <p class="text-center text-muted">Ще немає постів</p>
-  {% endfor %}
-
-
-<!-- ================= JS ================= -->
-
+<!-- Infinite scroll JS (same as before) -->
 <script>
-document.addEventListener("DOMContentLoaded", () => {
+let page = 2;
+let loading = false;
+let hasNext = {{ page_obj.has_next|yesno:"true,false" }};
 
-  /* ===================== CSRF ===================== */
-  const csrftoken = (() => {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== "") {
-      document.cookie.split(";").forEach(cookie => {
-        cookie = cookie.trim();
-        if (cookie.startsWith("csrftoken=")) {
-          cookieValue = decodeURIComponent(cookie.substring("csrftoken=".length));
-        }
-      });
-    }
-    return cookieValue;
-  })();
+window.addEventListener("scroll", async () => {
+  if (!hasNext || loading) return;
+  if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 300) {
+    loading = true;
+    document.getElementById("loader").style.display = "block";
 
-  async function postJSON(url, data = {}) {
-    const res = await fetch(url, {
-      method: "POST",
-      headers: {
-        "X-CSRFToken": csrftoken,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(data)
+    const res = await fetch(`?page=${page}`, {
+      headers: { "X-Requested-With": "XMLHttpRequest" }
     });
-    if (!res.ok) throw new Error(await res.text());
-    return await res.json();
+    const data = await res.json();
+
+    document.getElementById("posts-container").insertAdjacentHTML("beforeend", data.html);
+    hasNext = data.has_next;
+    page++;
+    loading = false;
+    document.getElementById("loader").style.display = "none";
   }
-
-  /* ===================== Коментарі ===================== */
-  document.body.addEventListener("submit", async e => {
-    const form = e.target.closest(".comment-form");
-    if (!form) return;
-    e.preventDefault();
-
-    const postId = form.dataset.post;
-    const input = form.querySelector("input[name='text']");
-    const text = input.value.trim();
-    if (!text) return;
-
-    try {
-      const data = await postJSON(`/posts/${postId}/comment/`, { text });
-      if (!data.success) return alert("Помилка");
-
-      const block = form.closest(".comments-block");
-
-      const div = document.createElement("div");
-      div.className = "comment d-flex align-items-center mb-2";
-      div.id = `comment-${data.comment_id}`;
-      div.innerHTML = `
-        <img src="${data.avatar || '/static/images/default-avatar.png'}"
-             class="rounded-circle me-2"
-             style="width:30px;height:30px;object-fit:cover;">
-        <div class="flex-grow-1"><b>${data.author}</b>: ${data.text}</div>
-        <button type="button"
-                class="delete-comment-btn btn btn-sm btn-outline-danger ms-2"
-                data-comment="${data.comment_id}">✖</button>
-      `;
-      block.insertBefore(div, form);
-      form.reset();
-
-      const countBlock = block.querySelector(".comment-count");
-      let count = parseInt(countBlock.dataset.count);
-      count++;
-      countBlock.dataset.count = count;
-      countBlock.textContent = `${count} коментарів`;
-    } catch (err) {
-      console.error("comment error:", err);
-    }
-  });
-
-  /* ===================== Кліки ===================== */
-  document.body.addEventListener("click", async e => {
-    const btn = e.target.closest("button");
-    if (!btn) return;
-
-    /* ---------- 🗑 DELETE COMMENT ---------- */
-    if (btn.classList.contains("delete-comment-btn")) {
-      const id = btn.dataset.comment;
-      if (!confirm("Видалити коментар?")) return;
-
-      try {
-        const data = await postJSON(`/posts/comment/${id}/delete/`);
-        if (data.success) {
-          btn.closest(".comment").remove();
-
-          const postCard = btn.closest(".post-card");
-          const countBlock = postCard.querySelector(".comment-count");
-          let count = parseInt(countBlock.dataset.count);
-          count = Math.max(count - 1, 0);
-          countBlock.dataset.count = count;
-          countBlock.textContent = `${count} коментарів`;
-        }
-      } catch (err) {
-        console.error("delete comment error:", err);
-      }
-    }
-
-    /* ---------- ❤️ LIKE ---------- */
-    if (btn.classList.contains("like-btn")) {
-      const postId = btn.dataset.post;
-
-      try {
-        const data = await postJSON(`/posts/${postId}/like/`);
-        if (data.success) {
-          const num = btn.querySelector(".like-count");
-          num.textContent = data.like_count;
-
-          const icon = btn.querySelector("i");
-          icon.classList.toggle("bi-heart");
-          icon.classList.toggle("bi-heart-fill");
-          icon.classList.toggle("text-danger");
-        }
-      } catch (err) {
-        console.error("like error:", err);
-      }
-    }
-
-    /* ---------- 🗑 DELETE POST ---------- */
-    if (btn.classList.contains("delete-post-btn")) {
-      const postId = btn.dataset.post;
-      if (!confirm("Видалити пост?")) return;
-
-      try {
-        const data = await postJSON(`/posts/${postId}/delete/`);
-        if (data.success) {
-          document.getElementById(`post-${postId}`).remove();
-        }
-      } catch (err) {
-        console.error("delete post error:", err);
-      }
-    }
-
-    /* ---------- 🔁 REPOST ---------- */
-    if (btn.classList.contains("repost-btn")) {
-      const postId = btn.dataset.post;
-
-      try {
-        const data = await postJSON(`/posts/${postId}/repost/`);
-        if (data.success) {
-          alert("Репост виконано!");
-        }
-      } catch (err) {
-        console.error("repost error:", err);
-      }
-    }
-
-    /* ---------- ⬆⬇ VOTE ---------- */
-    if (btn.classList.contains("vote-btn")) {
-      const postId = btn.dataset.post;
-      const action = btn.dataset.action; // "up" або "down"
-
-      try {
-        const data = await postJSON(`/posts/vote/${postId}/${action}/`);
-        const score = document.getElementById(`score-${postId}`);
-        score.textContent = data.score;
-      } catch (err) {
-        console.error("vote error:", err);
-      }
-    }
-
-  });
-
 });
 </script>
-
-
 
 {% endblock %}

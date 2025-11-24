@@ -2,9 +2,8 @@ from pathlib import Path
 import os
 
 # --- Базова папка проєкту ---
-BASE_DIR = Path(__file__).resolve().parent
-
-  # наприклад: C:\Users\sypen\Downloads\staemnotreal
+BASE_DIR = Path(__file__).resolve().parent.parent
+# Наприклад: C:/Users/sypen/Downloads/staemnotreal
 
 # --- Безпека ---
 SECRET_KEY = 'django-insecure-test-key'
@@ -21,6 +20,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    # Channels
     "channels",
 
     # Сторонні
@@ -35,10 +35,9 @@ INSTALLED_APPS = [
 
     'django.contrib.humanize',
 
-    # 🔥 Only this — correct version!
+    # 🔥 Notifications (правильне підключення)
     'notifications.apps.NotificationsConfig',
 ]
-
 
 # --- Middleware ---
 MIDDLEWARE = [
@@ -52,33 +51,32 @@ MIDDLEWARE = [
 ]
 
 # --- URLS & WSGI ---
-# Якщо структура стандартна, файли мають бути в папці "staemnotreal/"
-ROOT_URLCONF = 'urls'
-ASGI_APPLICATION = "asgi.application"
-WSGI_APPLICATION = 'wsgi.application'
-
+ROOT_URLCONF = 'staemnotreal.urls'
+WSGI_APPLICATION = 'staemnotreal.wsgi.application'
+ASGI_APPLICATION = "staemnotreal.asgi.application"
 
 # --- Шаблони ---
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [BASE_DIR / 'templates'],  # глобальна папка templates
-        'APP_DIRS': True,  # шаблони всередині додатків
+        'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                # Додаємо свій процесор для сповіщень
-                 'notifications.context_processors.notifications_processor',
-                 'notifications.context_processors.unread_notifications',
 
+                # Додаємо свої процесори
+                'notifications.context_processors.notifications_processor',
+                'notifications.context_processors.unread_notifications',
             ],
         },
     },
 ]
 
+# --- Channels Layer (in-memory) ---
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels.layers.InMemoryChannelLayer",
@@ -96,35 +94,36 @@ DATABASES = {
 # --- Валідація пароля ---
 AUTH_PASSWORD_VALIDATORS = []
 
-# --- Мова та час ---
+# --- Локалізація ---
 LANGUAGE_CODE = 'uk'
 TIME_ZONE = 'Europe/Kiev'
 USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
-# --- Локалізація (шлях до перекладів) ---
 LOCALE_PATHS = [
     BASE_DIR / 'locale',
 ]
 
 # --- Статика ---
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR / 'static']  # глобальна папка static
-STATIC_ROOT = BASE_DIR / 'staticfiles'    # для collectstatic у продакшені
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',   # папка де ТИ кладеш CSS, JS, картинки
+]
+STATIC_ROOT = BASE_DIR / 'staticfiles'  # створюється командою collectstatic
 
 # --- Медіа ---
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# --- Автоматичне поле по замовчуванню ---
+# --- Автоматичні ID ---
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# --- Перенаправлення після логіну ---
+# --- Redirects ---
 LOGIN_REDIRECT_URL = "/posts/feed/"
 LOGOUT_REDIRECT_URL = "/accounts/login/"
 
-# --- REST Framework (опціонально, якщо ти плануєш API) ---
+# --- REST Framework ---
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',

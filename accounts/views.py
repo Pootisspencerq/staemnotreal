@@ -43,28 +43,17 @@ def profile_view(request, username):
     profile_user = get_object_or_404(User, username=username)
     profile, _ = Profile.objects.get_or_create(user=profile_user)
 
-    # NORMAL POSTS (без reposts)
+    # 🔥 Один список постів (і звичайні, і репости)
     posts = Post.objects.filter(
-        author=profile_user,
-        shared_from__isnull=True
-    ).order_by("-created_at")
+        author=profile_user
+    ).order_by("-created_at").select_related("author", "shared_from")
 
-    # REPOSTS
-    reposts = Post.objects.filter(
-        author=profile_user,
-        shared_from__isnull=False
-    ).order_by("-created_at")
-
-    # Add computed attributes for template
+    # 🔥 Обчислення даних (лайки, голоси)
     for post in posts:
         post.liked_by_user = post.likes.filter(user=request.user).exists()
         post.vote_score = post.votes.aggregate(total=Sum("vote_value")).get("total") or 0
 
-    for post in reposts:
-        post.liked_by_user = post.likes.filter(user=request.user).exists()
-        post.vote_score = post.votes.aggregate(total=Sum("vote_value")).get("total") or 0
-
-    # friend system (placeholder — you can fill later)
+    # TODO: тут буде нормальна система друзів
     is_friend = False
     sent_request = None
     received_request = None
@@ -73,12 +62,10 @@ def profile_view(request, username):
         "profile_user": profile_user,
         "profile": profile,
         "posts": posts,
-        "reposts": reposts,
         "is_friend": is_friend,
         "sent_request": sent_request,
         "received_request": received_request,
     })
-
 
 # -------------------
 # 🔹 Редагування профілю
