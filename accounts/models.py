@@ -17,7 +17,9 @@ class Profile(models.Model):
     favorite_color = models.CharField(max_length=7, blank=True, null=True)
     cover = models.ImageField(upload_to='covers/', blank=True, null=True)
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='user')
-
+    theme = models.CharField(max_length=30, blank=True, null=True)
+    display_name = models.CharField(max_length=100, blank=True, null=True)
+    links = models.JSONField(blank=True, null=True)
     def __str__(self):
         return f"{self.user.username} Profile"
 

@@ -43,17 +43,28 @@ def profile_view(request, username):
     profile_user = get_object_or_404(User, username=username)
     profile, _ = Profile.objects.get_or_create(user=profile_user)
 
-    # 🔥 Один список постів (і звичайні, і репости)
+    # Посты
     posts = Post.objects.filter(
-        author=profile_user
-    ).order_by("-created_at").select_related("author", "shared_from")
+        author=profile_user,
+        shared_from__isnull=True
+    ).order_by("-created_at")
 
-    # 🔥 Обчислення даних (лайки, голоси)
+    # Репосты
+    reposts = Post.objects.filter(
+        author=profile_user,
+        shared_from__isnull=False
+    ).order_by("-created_at")
+
+    # Лайки и голоса
     for post in posts:
         post.liked_by_user = post.likes.filter(user=request.user).exists()
         post.vote_score = post.votes.aggregate(total=Sum("vote_value")).get("total") or 0
 
-    # TODO: тут буде нормальна система друзів
+    for post in reposts:
+        post.liked_by_user = post.likes.filter(user=request.user).exists()
+        post.vote_score = post.votes.aggregate(total=Sum("vote_value")).get("total") or 0
+
+    # ДРУЗІ — ПОКИ СТАТИКА
     is_friend = False
     sent_request = None
     received_request = None
@@ -61,11 +72,15 @@ def profile_view(request, username):
     return render(request, "accounts/profile.html", {
         "profile_user": profile_user,
         "profile": profile,
+
         "posts": posts,
+        "reposts": reposts,   # 🔥 ДОДАНО — тепер репости працюють
+
         "is_friend": is_friend,
         "sent_request": sent_request,
         "received_request": received_request,
     })
+
 
 # -------------------
 # 🔹 Редагування профілю
@@ -83,4 +98,26 @@ def edit_profile(request):
     else:
         form = ProfileForm(instance=profile)
 
-    return render(request, "accounts/edit_profile.html", {"form": form})
+    return render(request, "accounts/edit_profile.html", {
+        "form": form,
+        "user_profile": profile,   # 🔥 ДОДАНО
+    })
+
+@login_required
+def delete_avatar(request):
+    profile, _ = Profile.objects.get_or_create(user=request.user)
+
+    if profile.avatar:
+        profile.avatar.delete(save=True)
+
+    return redirect("accounts:edit_profile")
+
+
+@login_required
+def delete_cover(request):
+    profile, _ = Profile.objects.get_or_create(user=request.user)
+
+    if profile.cover:
+        profile.cover.delete(save=True)
+
+    return redirect("accounts:edit_profile")

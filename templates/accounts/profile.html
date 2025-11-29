@@ -12,18 +12,45 @@
             <img src="{% static 'images/default-avatar.png' %}" alt="Аватар" class="img-thumbnail" width="150">
         {% endif %}
         <div>
-            <h2>{{ profile_user.username }}</h2>
+            {% if profile.display_name %}
+                <h2>{{ profile.display_name }}</h2>
+            {% else %}
+                <h2>{{ profile_user.username }}</h2>
+            {% endif %}
 
             {% if profile.bio %}
                 <p><strong>Про себе:</strong> {{ profile.bio }}</p>
             {% endif %}
 
+            {% if profile.links %}
+                <p><strong>Посилання:</strong> {{ profile.links }}</p>
+            {% endif %}
+
+            {% if profile.theme %}
+                <p><strong>Тема профілю:</strong> {{ profile.theme }}</p>
+            {% endif %}
+
             {% if profile.favorite_color %}
-                <p>
-                    <strong>Улюблений колір:</strong>
+                <p><strong>Улюблений колір:</strong>
                     <span style="color: {{ profile.favorite_color }}">{{ profile.favorite_color }}</span>
                 </p>
             {% endif %}
+
+            <!-- PROFILE COVER -->
+            <div class="mb-4">
+                {% if profile.cover %}
+                    <img src="{{ profile.cover.url }}"
+                        alt="Обкладинка"
+                        class="img-fluid rounded"
+                        style="max-height: 260px; object-fit: cover; width: 100%;">
+                {% else %}
+                    <img src="{% static 'images/default-cover.jpg' %}"
+                        alt="Обкладинка"
+                        class="img-fluid rounded"
+                        style="max-height: 260px; object-fit: cover; width: 100%;">
+                {% endif %}
+            </div>
+
 
             {% if profile_user == user %}
                 <a href="{% url 'accounts:edit_profile' %}" class="btn btn-secondary mt-2">Редагувати профіль</a>
