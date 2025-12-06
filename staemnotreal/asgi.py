@@ -4,7 +4,7 @@ from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.auth import AuthMiddlewareStack
 from django.core.asgi import get_asgi_application 
 # 1️⃣ Set Django settings module before anything else
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'staemnotreal.settings')
 django.setup()  # ✅ initialize apps registry
 
 # 2️⃣ Import your routing AFTER Django is ready
