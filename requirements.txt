@@ -1,9 +1,10 @@
-Django>=4.2,<6
+Django<6,>=4.2
 djangorestframework>=3.14
 channels>=4.0
 asgiref>=3.7
 daphne>=4.0
 Pillow>=10.0
-psycopg2-binary>=2.9 
+psycopg2-binary>=2.9
 python-dotenv>=1.0
-gunicorn>=20.1.0
+gunicorn
+sqlparse>=0.3.1
