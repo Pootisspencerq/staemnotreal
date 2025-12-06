@@ -8,7 +8,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # --- Безпека ---
 SECRET_KEY = 'django-insecure-test-key'
 DEBUG = True
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'staemnotreal.onrender.com']
 
 # --- Додатки ---
 INSTALLED_APPS = [
