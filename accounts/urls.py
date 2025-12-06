@@ -9,9 +9,9 @@ urlpatterns = [
     path("register/", views.register_view, name="register"),
     path("logout/", views.logout_view, name="logout"),
     path("edit/", views.edit_profile, name="edit_profile"),
-    
-    # Профіль
-    path("<str:username>/", views.profile_view, name="profile"),
+
+    path('delete-cover/', views.delete_cover, name='delete_cover'),
     path('delete-avatar/', views.delete_avatar, name='delete_avatar'),
-    path("delete-cover/", views.delete_cover, name="delete_cover"),
+
+    path("<str:username>/", views.profile_view, name="profile"),
 ]

@@ -13,12 +13,10 @@
                  class="rounded-circle border"
                  style="width:130px; height:130px; object-fit:cover;">
         </div>
-
         <div class="text-center mb-4">
             <a href="{% url 'accounts:delete_avatar' %}" class="btn btn-outline-danger btn-sm">
                 Видалити аватар
             </a>
-
         </div>
     {% endif %}
 
@@ -35,7 +33,6 @@
                  class="rounded border"
                  style="width:100%; height:200px; object-fit:cover;">
         </div>
-
         <div class="text-center mb-4">
             <a href="{% url 'accounts:delete_cover' %}" class="btn btn-outline-danger btn-sm">
                 Видалити обкладинку
@@ -55,12 +52,12 @@
 
         <!-- Новий аватар -->
         <label class="form-label text-light">Новий аватар</label>
-        <input type="file" name="avatar" id="avatarInput"
+        <input type="file" name="{{ form.avatar.name }}" id="avatarInput"
                class="form-control bg-dark text-light border-secondary mb-3">
 
         <!-- Нова обкладинка -->
         <label class="form-label text-light">Нова обкладинка</label>
-        <input type="file" name="cover" id="coverInput"
+        <input type="file" name="{{ form.cover.name }}" id="coverInput"
                class="form-control bg-dark text-light border-secondary mb-3">
 
         <!-- Імʼя -->
@@ -81,13 +78,9 @@
             {{ form.links|add_class:"form-control bg-dark text-light border-secondary" }}
         </div>
 
-        <!-- Тема профілю -->
-        <label class="form-label text-light">Тема профілю</label>
-        <div class="mb-3">
-            {{ form.theme|add_class:"form-select bg-dark text-light border-secondary" }}
-        </div>
 
-        <!-- Кольорова тема (favorite_color) -->
+
+        <!-- Улюблений колір -->
         {% if form.favorite_color %}
         <label class="form-label text-light">Улюблений колір</label>
         <div class="mb-3">
@@ -95,23 +88,25 @@
         </div>
         {% endif %}
 
-        <button type="submit" class="btn btn-primary w-100 mt-3">
-            Зберегти зміни
-        </button>
+        <button type="submit" class="btn btn-primary w-100 mt-3">Зберегти зміни</button>
     </form>
 </div>
 
 <script>
-    document.getElementById("avatarInput").addEventListener("change", function (e) {
+document.getElementById("avatarInput")?.addEventListener("change", function (e) {
+    if(e.target.files.length > 0){
         const img = document.getElementById("avatarPreview");
         img.src = URL.createObjectURL(e.target.files[0]);
         img.classList.remove("d-none");
-    });
+    }
+});
 
-    document.getElementById("coverInput").addEventListener("change", function (e) {
+document.getElementById("coverInput")?.addEventListener("change", function (e) {
+    if(e.target.files.length > 0){
         const img = document.getElementById("coverPreview");
         img.src = URL.createObjectURL(e.target.files[0]);
         img.classList.remove("d-none");
-    });
+    }
+});
 </script>
 {% endblock %}

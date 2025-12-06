@@ -104,20 +104,21 @@ def edit_profile(request):
     })
 
 @login_required
-def delete_avatar(request):
-    profile, _ = Profile.objects.get_or_create(user=request.user)
-
-    if profile.avatar:
-        profile.avatar.delete(save=True)
-
-    return redirect("accounts:edit_profile")
+def delete_cover(request):
+    profile = request.user.profile
+    if request.method == 'POST':
+        if profile.cover:
+            profile.cover.delete(save=True)
+        return redirect('accounts:profile', username=request.user.username)
+    return render(request, 'accounts/delete_cover.html')
 
 
 @login_required
-def delete_cover(request):
-    profile, _ = Profile.objects.get_or_create(user=request.user)
-
-    if profile.cover:
-        profile.cover.delete(save=True)
-
-    return redirect("accounts:edit_profile")
+def delete_avatar(request):
+    profile = request.user.profile
+    if not profile.avatar:
+        return redirect('accounts:profile', username=request.user.username)
+    if request.method == 'POST':
+        profile.avatar.delete(save=True)
+        return redirect('accounts:profile', username=request.user.username)
+    return render(request, 'accounts/delete_avatar.html')

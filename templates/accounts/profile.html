@@ -4,13 +4,30 @@
 {% block content %}
 <div class="container mt-5">
 
+    <!-- PROFILE COVER (FIXED POSITION) -->
+    <div class="mb-4">
+        {% if profile.cover %}
+            <img src="{{ profile.cover.url }}"
+                 alt="Обкладинка"
+                 class="img-fluid rounded"
+                 style="max-height: 260px; object-fit: cover; width: 100%;">
+        {% else %}
+            <img src="{% static 'images/default-cover.jpg' %}"
+                 alt="Обкладинка"
+                 class="img-fluid rounded"
+                 style="max-height: 260px; object-fit: cover; width: 100%;">
+        {% endif %}
+    </div>
+
     <!-- PROFILE HEADER -->
     <div class="d-flex align-items-center mb-4 gap-3">
+
         {% if profile.avatar %}
             <img src="{{ profile.avatar.url }}" alt="Аватар" class="img-thumbnail" width="150">
         {% else %}
             <img src="{% static 'images/default-avatar.png' %}" alt="Аватар" class="img-thumbnail" width="150">
         {% endif %}
+
         <div>
             {% if profile.display_name %}
                 <h2>{{ profile.display_name }}</h2>
@@ -36,22 +53,6 @@
                 </p>
             {% endif %}
 
-            <!-- PROFILE COVER -->
-            <div class="mb-4">
-                {% if profile.cover %}
-                    <img src="{{ profile.cover.url }}"
-                        alt="Обкладинка"
-                        class="img-fluid rounded"
-                        style="max-height: 260px; object-fit: cover; width: 100%;">
-                {% else %}
-                    <img src="{% static 'images/default-cover.jpg' %}"
-                        alt="Обкладинка"
-                        class="img-fluid rounded"
-                        style="max-height: 260px; object-fit: cover; width: 100%;">
-                {% endif %}
-            </div>
-
-
             {% if profile_user == user %}
                 <a href="{% url 'accounts:edit_profile' %}" class="btn btn-secondary mt-2">Редагувати профіль</a>
             {% elif user.is_authenticated %}
@@ -69,7 +70,7 @@
                         <span class="badge bg-warning text-dark">Запит надіслано</span>
 
                     {% elif received_request %}
-                        <form method="post" action="{% url 'friends:accept_friend_request' received_request.id %}" class="friend-form">
+                        <form method="post" action="{% url 'friends:accept' received_request.id %}" class="friend-form">
                             {% csrf_token %}
                             <button type="submit" class="btn btn-success btn-sm friend-btn">
                                 <i class="bi bi-person-check me-1"></i> Прийняти запит
@@ -89,9 +90,8 @@
         </div>
     </div>
 
-    <!-- TABS (Bootstrap 5 FIXED) -->
+    <!-- TABS -->
     <ul class="nav nav-pills mb-3" id="profileTab" role="tablist">
-
         <li class="nav-item" role="presentation">
             <button class="nav-link active"
                     id="posts-tab"
@@ -115,7 +115,6 @@
                 Репости
             </button>
         </li>
-
     </ul>
 
     <!-- TAB CONTENT -->
@@ -132,7 +131,6 @@
             {% empty %}
                 <p class="text-center text-muted">Немає постів</p>
             {% endfor %}
-
         </div>
 
         <!-- REPOSTS -->
@@ -146,8 +144,6 @@
             {% empty %}
                 <p class="text-center text-muted">Немає репостів</p>
             {% endfor %}
-
-
         </div>
 
     </div>
@@ -194,7 +190,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   });
-
 });
 </script>
 

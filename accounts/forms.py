@@ -2,18 +2,11 @@ from django import forms
 from .models import Profile
 
 class ProfileForm(forms.ModelForm):
+    links = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={'placeholder': 'YouTube, Discord, Instagram'})
+    )
     class Meta:
         model = Profile
-        fields = [
-            "avatar",
-            "cover",
-            "display_name",
-            "bio",
-            "links",
-            "theme",
-            "favorite_color",
-        ]
-        widgets = {
-            "bio": forms.Textarea(attrs={"rows": 4}),
-            "favorite_color": forms.TextInput(attrs={"type": "color"}),
-        }
+        fields = ['avatar', 'cover', 'display_name', 'bio', 'links', 'theme', 'favorite_color']
+

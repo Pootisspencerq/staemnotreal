@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Delete avatar{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <h2 class="mb-3">Delete avatar</h2>
+
+  {% if user.is_authenticated %}
+    <div class="mb-3">
+      {% if user.profile.avatar %}
+        <p>Current avatar:</p>
+        <img src="{{ user.profile.avatar.url }}" alt="Avatar" style="width:120px;height:120px;object-fit:cover;border-radius:50%;">
+      {% else %}
+        <p>No avatar uploaded.</p>
+      {% endif %}
+    </div>
+
+    <form method="post" class="mb-2">
+      {% csrf_token %}
+      <p>Are you sure you want to delete your avatar?</p>
+      <button type="submit" class="btn btn-danger">Yes — delete avatar</button>
+      <a href="{% url 'accounts:profile' username=user.username %}" class="btn btn-secondary ms-2">Cancel</a>
+
+    </form>
+  {% else %}
+    <p>You must be logged in to do this.</p>
+    <a href="{% url 'login' %}" class="btn btn-primary">Log in</a>
+  {% endif %}
+</div>
+{% endblock %}

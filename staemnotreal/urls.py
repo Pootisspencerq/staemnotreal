@@ -26,6 +26,7 @@ urlpatterns = [
 
     # --- Notifications ---
     path('notifications/', include('notifications.urls')),
+    path("friends/", include("friends.urls", namespace="friends")),
 
     # --- Головна сторінка (редірект на стрічку) ---
     path('', home_view, name='home'),
