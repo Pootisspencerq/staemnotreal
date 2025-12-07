@@ -33,3 +33,9 @@ class Friendship(models.Model):
         friends1 = Friendship.objects.filter(user1=user).values_list("user2", flat=True)
         friends2 = Friendship.objects.filter(user2=user).values_list("user1", flat=True)
         return User.objects.filter(id__in=friends1.union(friends2))
+
+    @staticmethod
+    def remove_friend(user1, user2):
+        # Видаляємо дружбу обом користувачам
+        Friendship.objects.filter(user1=user1, user2=user2).delete()
+        Friendship.objects.filter(user1=user2, user2=user1).delete()

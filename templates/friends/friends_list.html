@@ -1,24 +1,52 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block content %}
-<div class="container mt-4">
-    <h2 class="mb-3 text-light">👥 Мої друзі</h2>
+<div class="container py-4">
+
+    <h2 class="text-light mb-4">
+        <i class="bi bi-people-fill"></i> Мої друзі
+    </h2>
 
     {% if friends %}
-        <ul class="list-group">
+        <div class="row g-3">
             {% for f in friends %}
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                <span>{{ f.username }}</span>
+            <div class="col-12 col-md-6">
+                <div class="card bg-dark text-light shadow-sm rounded-3 p-3 d-flex flex-row align-items-center justify-content-between">
 
-                <form method="post" action="{% url 'friends:delete' f.id %}">
-                    {% csrf_token %}
-                    <button class="btn btn-danger btn-sm">Видалити</button>
-                </form>
-            </li>
+                    <div class="d-flex align-items-center gap-3">
+
+                        <!-- Аватар -->
+                        {% if f.profile.avatar %}
+                            <img src="{{ f.profile.avatar.url }}" 
+                                 class="rounded-circle" width="45" height="45">
+                        {% else %}
+                            <img src="{% static 'images/default-avatar.png' %}" 
+                                 class="rounded-circle" width="45" height="45">
+                        {% endif %}
+
+                        <!-- Ім'я -->
+                        <a href="{% url 'profile' f.username %}" class="text-decoration-none text-light">
+                            <strong>{{ f.username }}</strong>
+                        </a>
+                    </div>
+
+                    <!-- Видалити друга -->
+                    <form method="post" action="{% url 'friends:remove' f.id %}">
+                        {% csrf_token %}
+                        <button class="btn btn-danger btn-sm">
+                            <i class="bi bi-person-x-fill"></i>
+                        </button>
+                    </form>
+
+                </div>
+            </div>
             {% endfor %}
-        </ul>
+        </div>
+
     {% else %}
-        <p class="text-light">У тебе поки що немає друзів.</p>
+        <p class="text-light mt-3">У тебе поки немає друзів.</p>
     {% endif %}
+
 </div>
 {% endblock %}

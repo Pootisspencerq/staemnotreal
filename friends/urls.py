@@ -1,12 +1,11 @@
 from django.urls import path
-from .views import friends_list, friend_requests, send_request, accept_request, delete_friend
-
+from . import views 
 app_name = "friends"  # ← МАЄ БУТИ СТОВІДСОТКОВО!
 
 urlpatterns = [
-    path("", friends_list, name="list"),
-    path("requests/", friend_requests, name="requests"),
-    path("send/<int:user_id>/", send_request, name="send"),
-    path("accept/<int:req_id>/", accept_request, name="accept"),
-    path("remove/<int:user_id>/", delete_friend, name="remove"),
+    path("", views.friends_list, name="list"),
+    path("requests/", views.friend_requests, name="requests"),
+    path("send/<int:user_id>/", views.send_request, name="send"),
+    path('accept/<int:req_id>/', views.accept_request, name='accept'),
+    path('remove/<int:user_id>/', views.remove_friend, name='remove'),
 ]

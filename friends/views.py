@@ -15,9 +15,12 @@ def friends_list(request):
 
 @login_required
 def friend_requests(request):
-    incoming = FriendRequest.objects.filter(to_user=request.user, accepted=False)
-    outgoing = FriendRequest.objects.filter(from_user=request.user, accepted=False)
-    return render(request, "friends/friend_requests.html", {"incoming": incoming, "outgoing": outgoing})
+    incoming = FriendRequest.objects.filter(to_user=request.user)
+    outgoing = FriendRequest.objects.filter(from_user=request.user)
+    return render(request, "friends/friend_requests.html", {
+        "incoming": incoming,
+        "outgoing": outgoing
+    })
 
 
 @login_required
@@ -39,20 +42,27 @@ def send_request(request, user_id):
 
 @login_required
 def accept_request(request, req_id):
-    req = get_object_or_404(FriendRequest, id=req_id, to_user=request.user)
-
-    Friendship.objects.get_or_create(user1=req.from_user, user2=req.to_user)
-    req.accepted = True
-    req.save()
-
-    messages.success(request, "Додано у друзі ✔")
+    if request.method == "POST":
+        fr = get_object_or_404(FriendRequest, id=req_id, to_user=request.user)
+        fr.accept()  # твоя логіка прийняття
+        return redirect("friends:requests")
     return redirect("friends:requests")
 
+@login_required
+def remove_request(request, req_id):
+    if request.method == "POST":
+        fr = get_object_or_404(FriendRequest, id=req_id)
+        if fr.from_user == request.user or fr.to_user == request.user:
+            fr.delete()
+        return redirect("friends:requests")
+    return redirect("friends:requests")
 
 @login_required
-def delete_friend(request, user_id):
-    Friendship.objects.filter(user1=request.user, user2=user_id).delete()
-    Friendship.objects.filter(user2=request.user, user1=user_id).delete()
-
-    messages.success(request, "Друг видалений")
+def remove_friend(request, user_id):
+    if request.method == "POST":
+        friend = get_object_or_404(User, id=user_id)
+        # Видаляємо дружбу обом користувачам
+        Friendship.remove_friend(request.user, friend)
+        messages.success(request, f"{friend.username} більше не у твоїх друзях")
+        return redirect("friends:list")
     return redirect("friends:list")
