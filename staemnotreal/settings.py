@@ -71,6 +71,7 @@ TEMPLATES = [
                 # Додаємо свої процесори
                 'notifications.context_processors.notifications_processor',
                 'notifications.context_processors.unread_notifications',
+                'staemnotreal.context_processors.friend_requests_context',
             ],
         },
     },

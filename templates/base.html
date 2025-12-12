@@ -87,13 +87,13 @@
             {% if friend_requests %}
               {% for fr in friend_requests %}
                 <div class="dropdown-item d-flex justify-content-between align-items-center">
-                  <a href="{% url 'accounts:profile' fr.sender.username %}">
-                    {{ fr.sender.username }}
+                  <a href="{% url 'accounts:profile' fr.from_user.username %}">
+                    {{ fr.from_user.username }}
                   </a>
 
                   <div>
                     <a href="{% url 'friends:accept' fr.id %}" class="btn btn-sm btn-success">✓</a>
-                    <a href="{% url 'friends:reject' fr.id %}" class="btn btn-sm btn-danger">✕</a>
+                    <a href="{% url 'friends:cancel' fr.id %}" class="btn btn-sm btn-danger">✕</a>
                   </div>
                 </div>
               {% endfor %}

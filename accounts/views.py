@@ -69,13 +69,17 @@ def profile_view(request, username):
     sent_request = None
     received_request = None
 
+    if request.user.is_authenticated and request.user != profile_user:
+        is_friend = Friendship.objects.filter(user1=request.user, user2=profile_user).exists() or \
+                    Friendship.objects.filter(user1=profile_user, user2=request.user).exists()
+
+        sent_request = FriendRequest.objects.filter(from_user=request.user, to_user=profile_user).first()
+
+        received_request = FriendRequest.objects.filter(from_user=profile_user, to_user=request.user).first()
+
     return render(request, "accounts/profile.html", {
         "profile_user": profile_user,
         "profile": profile,
-
-        "posts": posts,
-        "reposts": reposts,   # 🔥 ДОДАНО — тепер репости працюють
-
         "is_friend": is_friend,
         "sent_request": sent_request,
         "received_request": received_request,

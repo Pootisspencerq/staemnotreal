@@ -26,9 +26,10 @@
                         {% endif %}
 
                         <!-- Ім'я -->
-                        <a href="{% url 'profile' f.username %}" class="text-decoration-none text-light">
+                        <a href="{% url 'accounts:profile' f.username %}" class="text-decoration-none text-light">
                             <strong>{{ f.username }}</strong>
                         </a>
+
                     </div>
 
                     <!-- Видалити друга -->

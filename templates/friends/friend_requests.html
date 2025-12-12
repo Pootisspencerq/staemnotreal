@@ -26,18 +26,18 @@
                 <div class="d-flex gap-2">
                     <form method="post" action="{% url 'friends:accept' req.id %}">
                         {% csrf_token %}
-                        <button class="btn btn-success btn-sm"><i class="bi bi-check2"></i> Прийняти</button>
+                        <button type='submit' class="btn btn-success btn-sm"><i class="bi bi-check2"></i> Прийняти</button>
                     </form>
 
-                    <form method="post" action="{% url 'friends:remove' req.id %}">
+                    <form method="post" action="{% url 'friends:cancel' req.id %}">
                         {% csrf_token %}
-                        <button class="btn btn-danger btn-sm"><i class="bi bi-x"></i> Відхилити</button>
+                        <button type='submit' class="btn btn-danger btn-sm"><i class="bi bi-x"></i> Відхилити</button>
                     </form>
                 </div>
 
             </div>
         </div>
-        {% endfor %}
+        {% endfor %} 
     {% else %}
         <p class="text-light">Немає вхідних запитів.</p>
     {% endif %}

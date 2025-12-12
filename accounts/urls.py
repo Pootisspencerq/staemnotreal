@@ -12,6 +12,6 @@ urlpatterns = [
 
     path('delete-cover/', views.delete_cover, name='delete_cover'),
     path('delete-avatar/', views.delete_avatar, name='delete_avatar'),
-
+    
     path("<str:username>/", views.profile_view, name="profile"),
 ]

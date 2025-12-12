@@ -15,8 +15,8 @@ def friends_list(request):
 
 @login_required
 def friend_requests(request):
-    incoming = FriendRequest.objects.filter(to_user=request.user)
-    outgoing = FriendRequest.objects.filter(from_user=request.user)
+    incoming =FriendRequest.objects.filter(to_user=request.user, accepted=False)
+    outgoing = FriendRequest.objects.filter(from_user=request.user, accepted=False) 
     return render(request, "friends/friend_requests.html", {
         "incoming": incoming,
         "outgoing": outgoing

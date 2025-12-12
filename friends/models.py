@@ -16,6 +16,11 @@ class FriendRequest(models.Model):
     def __str__(self):
         return f"{self.from_user} → {self.to_user}"
 
+    def accept (self):
+        self.accepted = True
+        self.save()
+        # Створюємо запис дружби для обох користувачів
+        Friendship.objects.get_or_create(user1=self.from_user, user2=self.to_user)
 
 class Friendship(models.Model):
     user1 = models.ForeignKey(User, related_name="friends_main", on_delete=models.CASCADE)
@@ -27,6 +32,7 @@ class Friendship(models.Model):
 
     def __str__(self):
         return f"{self.user1} ↔ {self.user2}"
+        
 
     @staticmethod
     def get_friends(user):

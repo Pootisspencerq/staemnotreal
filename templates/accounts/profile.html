@@ -59,36 +59,41 @@
                 <div class="mt-3" id="friendship-buttons">
 
                     {% if is_friend %}
-                        <form method="post" action="{% url 'friends:remove_friend' profile_user.id %}" class="friend-form">
+                        <form method="post" action="{% url 'friends:remove' profile_user.id %}">
                             {% csrf_token %}
-                            <button type="submit" class="btn btn-danger btn-sm friend-btn">
+                            <button type="submit" class="btn btn-danger btn-sm">
                                 <i class="bi bi-person-x me-1"></i> Видалити з друзів
                             </button>
                         </form>
 
                     {% elif sent_request %}
-                        <span class="badge bg-warning text-dark">Запит надіслано</span>
+                        <form method="post" action="{% url 'friends:cancel' sent_request.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-warning btn-sm">
+                                <i class="bi bi-x me-1"></i> Скасувати запит
+                            </button>
+                        </form>
 
                     {% elif received_request %}
-                        <form method="post" action="{% url 'friends:accept' received_request.id %}" class="friend-form">
+                        <form method="post" action="{% url 'friends:accept' received_request.id %}">
                             {% csrf_token %}
-                            <button type="submit" class="btn btn-success btn-sm friend-btn">
+                            <button type="submit" class="btn btn-success btn-sm">
                                 <i class="bi bi-person-check me-1"></i> Прийняти запит
                             </button>
                         </form>
 
                     {% else %}
-                        <form method="post" action="{% url 'friends:send' profile_user.id %}" class="friend-form">
+                        <form method="post" action="{% url 'friends:send' profile_user.id %}">
                             {% csrf_token %}
-                            <button type="submit" class="btn btn-primary btn-sm friend-btn">
+                            <button type="submit" class="btn btn-primary btn-sm">
                                 <i class="bi bi-person-plus me-1"></i> Додати в друзі
                             </button>
                         </form>
                     {% endif %}
-                </div>
-            {% endif %}
-        </div>
-    </div>
+                </div>  {# <-- закриваємо friendship-buttons #}
+            {% endif %}  {# <-- закриваємо elif user.is_authenticated #}
+        </div>  {# <-- закриваємо d-flex align-items-center #}
+    </div>  {# <-- закриваємо header блок #}
 
     <!-- TABS -->
     <ul class="nav nav-pills mb-3" id="profileTab" role="tablist">
@@ -149,48 +154,6 @@
     </div>
 </div>
 
-<!-- FRIEND BUTTON AJAX -->
-<script>
-document.addEventListener('DOMContentLoaded', () => {
 
-  function getCookie(name) {
-    const match = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
-    return match ? decodeURIComponent(match.pop()) : '';
-  }
-  const csrftoken = getCookie('csrftoken');
-
-  document.querySelectorAll('.friend-form').forEach(form => {
-    form?.addEventListener('submit', async e => {
-      e.preventDefault();
-
-      const btn = form.querySelector('.friend-btn');
-      const url = form.action;
-
-      try {
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: { 'X-CSRFToken': csrftoken }
-        });
-        const data = await res.json();
-
-        if (data.success) {
-          if (btn.classList.contains('btn-primary')) {
-            btn.outerHTML = '<span class="badge bg-warning text-dark">Запит надіслано</span>';
-          } else if (btn.classList.contains('btn-success')) {
-            btn.outerHTML = '<button class="btn btn-danger btn-sm friend-btn">Видалити з друзів</button>';
-          } else if (btn.classList.contains('btn-danger')) {
-            btn.outerHTML = '<button class="btn btn-primary btn-sm friend-btn">Додати в друзі</button>';
-          }
-        } else {
-          alert(data.error || 'Помилка');
-        }
-      } catch (err) {
-        console.error(err);
-        alert('Помилка при надсиланні запиту');
-      }
-    });
-  });
-});
-</script>
-
+  
 {% endblock %}
