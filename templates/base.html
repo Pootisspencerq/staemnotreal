@@ -28,6 +28,38 @@
       background: #e74c3c;
       box-shadow: 0 0 0 2px rgba(0,0,0,0.25);
     }
+
+    /* TEST YOUR MIGHT */
+    #konamiOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+    #tymBox {
+      background: #111;
+      padding: 30px;
+      border-radius: 12px;
+      width: 320px;
+      text-align: center;
+      color: #fff;
+    }
+    #tymMeter {
+      width: 100%;
+      height: 25px;
+      background: #333;
+      border-radius: 20px;
+      overflow: hidden;
+      margin: 15px 0;
+    }
+    #tymFill {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, #f00, #ff0, #0f0);
+    }
   </style>
 </head>
 
@@ -36,13 +68,11 @@
 <nav class="navbar navbar-expand-lg custom-navbar fixed-top">
   <div class="container">
 
-    <!-- Logo -->
     <a class="navbar-brand d-flex align-items-center" href="{% url 'home' %}">
       <img src="{% static 'images/logo.png' %}" class="navbar-logo me-2">
       <span class="navbar-title">StaemNotReal</span>
     </a>
 
-    <!-- Mobile toggle -->
     <button class="navbar-toggler text-light" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
       <i class="fas fa-bars"></i>
     </button>
@@ -60,14 +90,12 @@
 
         {% if user.is_authenticated %}
 
-        <!-- FRIENDS LINK -->
         <li class="nav-item">
           <a class="nav-link" href="{% url 'friends:list' %}">
             <i class="fas fa-user-friends"></i> Друзі
           </a>
         </li>
 
-        <!-- FRIEND REQUESTS DROPDOWN -->
         <li class="nav-item dropdown me-2">
           <a class="nav-link position-relative" data-bs-toggle="dropdown">
             <i class="fas fa-user-plus"></i>
@@ -77,11 +105,7 @@
           </a>
 
           <div class="dropdown-menu dropdown-menu-end notif-dropdown">
-
-            <div class="px-3 py-2">
-              <strong>Запити в друзі</strong>
-            </div>
-
+            <div class="px-3 py-2"><strong>Запити в друзі</strong></div>
             <div class="dropdown-divider"></div>
 
             {% if friend_requests %}
@@ -90,7 +114,6 @@
                   <a href="{% url 'accounts:profile' fr.from_user.username %}">
                     {{ fr.from_user.username }}
                   </a>
-
                   <div>
                     <a href="{% url 'friends:accept' fr.id %}" class="btn btn-sm btn-success">✓</a>
                     <a href="{% url 'friends:cancel' fr.id %}" class="btn btn-sm btn-danger">✕</a>
@@ -100,55 +123,9 @@
             {% else %}
               <p class="text-center text-muted m-3">Немає нових запитів</p>
             {% endif %}
-
           </div>
         </li>
 
-        <!-- NOTIFICATIONS DROPDOWN -->
-        <li class="nav-item dropdown me-2">
-          <a class="nav-link position-relative" id="notificationsToggle" data-bs-toggle="dropdown">
-            <i class="fas fa-bell"></i>
-            {% if unread_count > 0 %}
-              <span id="notif-dot" class="notif-badge-dot"></span>
-            {% endif %}
-          </a>
-
-          <div class="dropdown-menu dropdown-menu-end notif-dropdown">
-
-            <div class="px-3 py-2 d-flex justify-content-between">
-              <strong>Сповіщення</strong>
-              <a href="#" id="mark-all-read" class="small">Очистити</a>
-            </div>
-
-            <div class="dropdown-divider"></div>
-
-            <div id="notifications-list">
-              {% if latest_notifications %}
-                {% for n in latest_notifications %}
-                  <a href="{{ n.link|default:'#' }}"
-                     class="dropdown-item notification-item {% if not n.is_read %}unread{% endif %}"
-                     data-id="{{ n.id }}">
-                    <div>
-                      {{ n.verb|truncatechars:80 }}
-                      <div><small class="text-muted">{{ n.timestamp|timesince }} тому</small></div>
-                    </div>
-                  </a>
-                {% endfor %}
-              {% else %}
-                <p class="text-center text-muted m-3">Немає сповіщень</p>
-              {% endif %}
-            </div>
-
-            <div class="dropdown-divider"></div>
-
-            <a class="dropdown-item text-center" href="{% url 'notifications:list' %}">
-              Переглянути всі
-            </a>
-
-          </div>
-        </li>
-
-        <!-- PROFILE -->
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle d-flex align-items-center" data-bs-toggle="dropdown">
             {% if user.profile.avatar %}
@@ -179,15 +156,12 @@
         </li>
 
         {% else %}
-
           <li class="nav-item"><a class="nav-link" href="{% url 'accounts:login' %}">Увійти</a></li>
           <li class="nav-item"><a class="nav-link" href="{% url 'accounts:register' %}">Реєстрація</a></li>
-
         {% endif %}
 
       </ul>
     </div>
-
   </div>
 </nav>
 
@@ -197,78 +171,127 @@
   {% block content %}{% endblock %}
 </div>
 
-<!-- WebSocket notifications -->
-{% if user.is_authenticated %}
+<div id="konamiOverlay" role="dialog" aria-modal="true" aria-hidden="true">
+  <div id="tymBox">
+    <h2>ВИПРОБУЙ СВОЮ СИЛУ</h2>
+
+    <div id="tymMeter">
+      <div id="tymFill"></div>
+      
+      <!-- 🔹 Цільова зона: тут треба вдарити -->
+      <div id="tymTarget"></div> 
+    </div>
+
+    <p id="tymText">МАСИ СПАМ, ПОТРАП У ЗЕЛЕНУ ЗОНУ!</p>
+
+    <!-- 🔹 Кнопка удару показується тільки після попадання в цільову зону -->
+    <button id="strikeBtn" class="btn btn-success mt-3" style="display:none;">
+      💥 УДАР
+    </button>
+
+    <button class="btn btn-danger mt-3" onclick="hideKonami()">
+      ✖ Вийти
+    </button>
+  </div>
+</div>
+
+
+
 <script>
-(function(){
-  const wsProtocol = location.protocol === "https:" ? "wss" : "ws";
-  const wsUrl = wsProtocol + "://" + location.host + "/ws/notifications/";
-  let socket = null;
+const konamiCode = [
+  "ArrowUp","ArrowUp","ArrowDown","ArrowDown",
+  "ArrowLeft","ArrowRight","ArrowLeft","ArrowRight","KeyB","KeyA"
+];
 
-  function connectWS() {
-    socket = new WebSocket(wsUrl);
-    socket.onmessage = event => handleWS(event);
-    socket.onclose = () => setTimeout(connectWS, 2000);
-  }
+let buffer = [];
+let сила = 0; // 🔹 Поточна сила
+let активнаГра = false; // 🔹 Гра активна чи ні
+let дренаж; // 🔹 Interval для падіння сили
+let inTargetTime = 0; // 🔹 Лічильник часу у цільовій зоні
+const targetMin = 60; // 🔹 Початок зеленої зони (%)
+const targetMax = 80; // 🔹 Кінець зеленої зони (%)
 
-  function handleWS(event) {
-    const payload = JSON.parse(event.data);
+const overlay = document.getElementById("konamiOverlay");
+const fill = document.getElementById("tymFill");
+const text = document.getElementById("tymText");
+const strikeBtn = document.getElementById("strikeBtn");
 
-    if(payload.type === "notification") {
-      updateBadge(payload.unread_count);
-      if(payload.notification_html) prepend(payload.notification_html);
-    }
+function оновитиШкалу() { // 🔹 Обновлення візуальної шкали
+  fill.style.width = сила + "%";
+}
 
-    if(payload.type === "count_update") {
-      updateBadge(payload.unread_count);
-    }
-  }
+function resetGame() { // 🔹 Скидання перед стартом
+  сила = 0;
+  inTargetTime = 0;
+  strikeBtn.style.display = "none"; // 🔹 Ховаємо кнопку удару
+  strikeBtn.disabled = false;
+  оновитиШкалу();
+}
 
-  function updateBadge(count) {
-    const anchor = document.getElementById("notificationsToggle");
-    let dot = document.getElementById("notif-dot");
+function showKonami() { // 🔹 Старт гри
+  overlay.style.display = "flex";
+  overlay.setAttribute("aria-hidden", "false");
 
-    if(count > 0) {
-      if(!dot) {
-        dot = document.createElement("span");
-        dot.id = "notif-dot";
-        dot.className = "notif-badge-dot";
-        anchor.appendChild(dot);
+  resetGame();
+  активнаГра = true;
+  text.textContent = "МАСИ СПАМ";
+
+  // 🔹 Падіння сили кожні 50ms
+  дренаж = setInterval(() => {
+    if (!активнаГра) return;
+    сила = Math.max(0, сила - 1); 
+    оновитиШкалу();
+
+    // 🔹 Перевірка попадання в цільову зону
+    if (сила >= targetMin && сила <= targetMax) {
+      inTargetTime++;
+      if (inTargetTime >= 20) {  // 🔹 20*50ms = 1 секунда утримання
+        strikeBtn.style.display = "block"; // 🔹 Показуємо кнопку удару
+        text.textContent = "НАЖМИ УДАР!";
+        clearInterval(дренаж); // 🔹 Зупиняємо падіння, тепер тільки удар
       }
     } else {
-      dot?.remove();
+      inTargetTime = 0;
     }
+  }, 50);
+}
+
+function hideKonami() { // 🔹 Закрити overlay
+  overlay.style.display = "none";
+  overlay.setAttribute("aria-hidden", "true");
+  clearInterval(дренаж);
+  активнаГра = false;
+}
+
+// 🔹 Кнопка удару
+strikeBtn.onclick = () => {
+  if (сила >= targetMin && сила <= targetMax) {
+    text.textContent = "💥 ВИ ПЕРЕМОГЛИ!"; // 🔹 Успіх
+    strikeBtn.disabled = true;
+  } else {
+    text.textContent = "❌ ПОРАЗКА!"; // 🔹 Промах
+  }
+};
+
+document.addEventListener("keydown", (e) => {
+  buffer.push(e.code);
+  if (buffer.length > konamiCode.length) buffer.shift();
+
+  if (JSON.stringify(buffer) === JSON.stringify(konamiCode)) {
+    showKonami(); // 🔹 Старт гри по Konami code
+    buffer = [];
+    return;
   }
 
-  function prepend(html) {
-    const list = document.getElementById("notifications-list");
-    const wrap = document.createElement("div");
-    wrap.innerHTML = html.trim();
-    list.prepend(wrap.firstElementChild);
+  if (активнаГра && e.code === "Space") { // 🔹 Тискання пробілу піднімає шкалу
+    сила = Math.min(100, сила + 3);
+    оновитиШкалу();
   }
-
-  document.getElementById("mark-all-read")?.addEventListener("click", e => {
-    e.preventDefault();
-
-    fetch("{% url 'notifications:mark_all' %}", {
-      method: "POST",
-      headers: { "X-CSRFToken": getCookie("csrftoken") }
-    }).then(() => {
-      updateBadge(0);
-      document.querySelectorAll(".notification-item.unread")
-        .forEach(x => x.classList.remove("unread"));
-    });
-  });
-
-  function getCookie(name){
-    const m = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
-    return m ? m.pop() : "";
-  }
-
-  connectWS();
-})();
+});
 </script>
-{% endif %}
+
+
+
 
 </body>
 </html>
