@@ -131,13 +131,8 @@ def create_post(request):
         group=None
     )
 
-    html = render_to_string(
-        "posts/post_card.html",
-        {"post": post, "user": request.user},
-        request=request
-    )
-    return JsonResponse({"success": True, "html": html})
 
+    return redirect("posts:feed")   
 # -------------------------------
 # 💬 COMMENT + NOTIFICATIONS + WS
 # -------------------------------

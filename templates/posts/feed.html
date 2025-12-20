@@ -9,10 +9,8 @@
   <h2 class="mb-4 text-light"><i class="bi bi-newspaper"></i> Стрічка новин</h2>
 
   <!-- Створення поста -->
-  <form method="post" enctype="multipart/form-data" class="mb-4">
-      {% csrf_token %}
       {% include "posts/_post_form.html" %}
-  </form>
+
 
   <div id="posts-container">
     {% for post in page_obj %}

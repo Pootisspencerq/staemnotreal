@@ -1,4 +1,4 @@
-<form id="create-post-form" method="post" enctype="multipart/form-data"
+<form action="{% url 'posts:create_post' %}" id="create-post-form" method="post" enctype="multipart/form-data"
       class="mb-4 p-3 border rounded bg-dark shadow-sm">
   {% csrf_token %}
 
@@ -53,38 +53,8 @@ document.addEventListener('DOMContentLoaded', () => {
         : "Файл не вибрано";
   });
 
-  /* ===================== SUBMIT FORM ======================== */
-  form?.addEventListener('submit', async e => {
-    e.preventDefault();
 
-    const formData = new FormData(form);
-
-    try {
-      const res = await fetch("{% url 'posts:create_post' %}", {
-        method: "POST",
-        headers: { "X-CSRFToken": csrftoken },
-        body: formData
-      });
-
-      const data = await res.json();
-
-      if (data.success) {
-        const wrapper = document.createElement("div");
-        wrapper.innerHTML = data.post_html;
-
-        postsContainer.prepend(wrapper.firstElementChild);
-        form.reset();
-        fileName.textContent = "Файл не вибрано";
-
-      } else {
-        alert(data.error || "Помилка при створенні поста");
-      }
-
-    } catch (err) {
-      console.error(err);
-      alert("Помилка при створенні поста");
-    }
-  });
+  
 
 });
 </script>
