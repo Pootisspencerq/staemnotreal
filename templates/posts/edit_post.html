@@ -31,10 +31,7 @@
     <textarea name="text" rows="4" class="form-control mb-3"
               placeholder="Ваш текст...">{{ post.text|escape }}</textarea>
 
-    <!-- Посилання -->
-    <label class="text-light mb-1">Посилання</label>
-    <input type="url" name="link" value="{{ post.link }}" class="form-control mb-3"
-           placeholder="https://example.com">
+
 
     <!-- Попередній файл -->
     {% if post.file %}

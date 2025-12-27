@@ -36,55 +36,92 @@ def logout_view(request):
     return redirect("/")
 
 
-# -------------------
-# 🔹 Профіль користувача
-# -------------------
 def profile_view(request, username):
     profile_user = get_object_or_404(User, username=username)
     profile, _ = Profile.objects.get_or_create(user=profile_user)
 
-    # Посты
+    # ======================
+    # POSTS (original)
+    # ======================
     posts = Post.objects.filter(
         author=profile_user,
         shared_from__isnull=True
     ).order_by("-created_at")
 
-    # Репосты
+    # ======================
+    # REPOSTS
+    # ======================
     reposts = Post.objects.filter(
         author=profile_user,
         shared_from__isnull=False
     ).order_by("-created_at")
 
-    # Лайки и голоса
-    for post in posts:
-        post.liked_by_user = post.likes.filter(user=request.user).exists()
-        post.vote_score = post.votes.aggregate(total=Sum("vote_value")).get("total") or 0
+    # ======================
+    # LIKE + VOTE DATA
+    # ======================
+    if request.user.is_authenticated:
+        for post in posts:
+            post.liked_by_user = post.likes.filter(user=request.user).exists()
+            post.vote_score = post.votes.aggregate(
+                total=Sum("vote_value")
+            )["total"] or 0
 
-    for post in reposts:
-        post.liked_by_user = post.likes.filter(user=request.user).exists()
-        post.vote_score = post.votes.aggregate(total=Sum("vote_value")).get("total") or 0
+        for post in reposts:
+            post.liked_by_user = post.likes.filter(user=request.user).exists()
+            post.vote_score = post.votes.aggregate(
+                total=Sum("vote_value")
+            )["total"] or 0
+    else:
+        for post in posts:
+            post.liked_by_user = False
+            post.vote_score = post.votes.aggregate(
+                total=Sum("vote_value")
+            )["total"] or 0
 
-    # ДРУЗІ — ПОКИ СТАТИКА
+        for post in reposts:
+            post.liked_by_user = False
+            post.vote_score = post.votes.aggregate(
+                total=Sum("vote_value")
+            )["total"] or 0
+
+    # ======================
+    # FRIENDS
+    # ======================
     is_friend = False
     sent_request = None
     received_request = None
 
     if request.user.is_authenticated and request.user != profile_user:
-        is_friend = Friendship.objects.filter(user1=request.user, user2=profile_user).exists() or \
-                    Friendship.objects.filter(user1=profile_user, user2=request.user).exists()
+        is_friend = (
+            Friendship.objects.filter(user1=request.user, user2=profile_user).exists()
+            or Friendship.objects.filter(user1=profile_user, user2=request.user).exists()
+        )
 
-        sent_request = FriendRequest.objects.filter(from_user=request.user, to_user=profile_user).first()
+        sent_request = FriendRequest.objects.filter(
+            from_user=request.user,
+            to_user=profile_user
+        ).first()
 
-        received_request = FriendRequest.objects.filter(from_user=profile_user, to_user=request.user).first()
+        received_request = FriendRequest.objects.filter(
+            from_user=profile_user,
+            to_user=request.user
+        ).first()
 
+    # ======================
+    # CONTEXT (CRITICAL)
+    # ======================
     return render(request, "accounts/profile.html", {
         "profile_user": profile_user,
         "profile": profile,
+
+        # 🔥 ОБОВʼЯЗКОВО
+        "posts": posts,
+        "reposts": reposts,
+
         "is_friend": is_friend,
         "sent_request": sent_request,
         "received_request": received_request,
     })
-
 
 # -------------------
 # 🔹 Редагування профілю

@@ -1,74 +1,152 @@
 {% load static %}
 {% load humanize %}
-{% with original=post.shared_from|default:post %}
-<div class="post-card bg-dark rounded shadow-sm p-3 mb-4 d-flex gap-3" id="post-{{ post.id }}">
-  <!-- Голоси -->
+
+{% with original=post.shared_from|default_if_none:post %}
+<div class="post-card bg-dark rounded shadow-sm p-3 mb-4 d-flex gap-3">
+
+  <!-- ================= -->
+  <!-- VOTES (AJAX)     -->
+  <!-- ================= -->
   <div class="vote-column text-center">
-    <button type="button" class="vote-btn btn btn-outline-light btn-sm d-block mb-1" data-post="{{ post.id }}" data-action="up">▲</button>
-    <div class="vote-count text-light fw-bold" id="score-{{ post.id }}">
-      {{ post.vote_score|default:0 }}
+
+    <button
+      class="btn btn-outline-light btn-sm d-block mb-1 vote-btn"
+      data-post="{{ original.id }}"
+      data-action="up">
+      ▲
+    </button>
+
+    <div
+      class="vote-count text-light fw-bold"
+      id="vote-count-{{ original.id }}">
+      {{ original.vote_score }}
     </div>
-    <button type="button" class="vote-btn btn btn-outline-light btn-sm d-block mt-1" data-post="{{ post.id }}" data-action="down">▼</button>
+
+    <button
+      class="btn btn-outline-light btn-sm d-block mt-1 vote-btn"
+      data-post="{{ original.id }}"
+      data-action="down">
+      ▼
+    </button>
+
   </div>
 
   <div class="flex-grow-1">
-    <!-- Header, text, media, actions... -->
+
+    <!-- ================= -->
+    <!-- HEADER            -->
+    <!-- ================= -->
     <div class="d-flex align-items-center mb-2">
       <div class="me-2">
-        {% if original.author.profile and original.author.profile.avatar %}
-          <img src="{{ original.author.profile.avatar.url }}" class="rounded-circle border" style="width:42px;height:42px;object-fit:cover;">
+        {% if original.author.profile.avatar %}
+          <img src="{{ original.author.profile.avatar.url }}"
+               class="rounded-circle border"
+               style="width:42px;height:42px;object-fit:cover;">
         {% else %}
-          <img src="{% static 'images/default-avatar.png' %}" class="rounded-circle border" style="width:42px;height:42px;object-fit:cover;">
+          <img src="{% static 'images/default-avatar.png' %}"
+               class="rounded-circle border"
+               style="width:42px;height:42px;object-fit:cover;">
         {% endif %}
       </div>
       <div>
-        <a href="{% url 'accounts:profile' original.author.username %}" class="fw-semibold text-primary text-decoration-none">{{ original.author.username }}</a>
+        <a href="{% url 'accounts:profile' original.author.username %}"
+           class="fw-semibold text-primary text-decoration-none">
+          {{ original.author.username }}
+        </a>
         <br>
-        <small class="text-muted">{{ original.created_at|naturaltime }}</small>
+        <small class="text-muted">
+          {{ original.created_at|naturaltime }}
+        </small>
       </div>
     </div>
 
+    <!-- ================= -->
+    <!-- TEXT              -->
+    <!-- ================= -->
     {% if original.text %}
-      <p class="text-light mb-2">{{ original.text|linebreaksbr }}</p>
+      <p class="text-light mb-2">
+        {{ original.text|linebreaksbr }}
+      </p>
     {% endif %}
 
+    <!-- ================= -->
+    <!-- FILE / MEDIA      -->
+    <!-- ================= -->
     {% if original.file %}
       {% with url=original.file.url|lower %}
         {% if ".jpg" in url or ".jpeg" in url or ".png" in url or ".gif" in url %}
           <img src="{{ original.file.url }}" class="img-fluid rounded mb-2">
         {% elif ".mp4" in url or ".webm" in url %}
-          <video controls class="w-100 rounded mb-2"><source src="{{ original.file.url }}" type="video/mp4"></video>
+          <video controls class="w-100 rounded mb-2">
+            <source src="{{ original.file.url }}">
+          </video>
         {% elif ".mp3" in url or ".wav" in url %}
-          <audio controls class="w-100 mb-2"><source src="{{ original.file.url }}"></audio>
+          <audio controls class="w-100 mb-2">
+            <source src="{{ original.file.url }}">
+          </audio>
         {% else %}
-          <a href="{{ original.file.url }}" class="text-info" target="_blank">Завантажити файл</a>
+          <a href="{{ original.file.url }}"
+             class="text-info"
+             target="_blank">
+            Завантажити файл
+          </a>
         {% endif %}
       {% endwith %}
     {% endif %}
 
-    {% if original.link %}
-      <p><a href="{{ original.link|escape }}" class="text-info" target="_blank">{{ original.link|escape }}</a></p>
-    {% endif %}
-
-    <!-- Actions: like, comment, delete, repost -->
+    <!-- ================= -->
+    <!-- ACTIONS           -->
+    <!-- ================= -->
     <div class="d-flex justify-content-between align-items-center mt-3">
+
+      <!-- LIKE (AJAX) -->
       <div>
-        <button type="button" class="like-btn btn btn-sm btn-outline-light" data-post="{{ post.id }}">
-          <i class="bi {% if post.liked_by_user %}bi-heart-fill text-danger{% else %}bi-heart{% endif %}"></i>
-          <span class="like-count">{{ post.like_count|default:0 }}</span>
+        <button
+          class="btn btn-sm btn-outline-light like-btn"
+          data-post="{{ original.id }}">
+
+          <i
+            id="like-icon-{{ original.id }}"
+            class="bi {% if original.liked_by_user %}bi-heart-fill text-danger{% else %}bi-heart{% endif %}">
+          </i>
+
+          <span id="like-count-{{ original.id }}">
+            {{ original.like_count }}
+          </span>
+
         </button>
-        <span class="comment-count text-muted ms-2" data-count="{{ post.comments.count }}">{{ post.comments.count }} коментарів</span>
       </div>
 
+      <!-- OTHER ACTIONS -->
       <div>
+
         {% if user == post.author %}
-          <button type="button" class="delete-post-btn btn btn-sm btn-outline-danger" data-post="{{ post.id }}"><i class="bi bi-trash"></i></button>
+          <form method="post"
+                action="{% url 'posts:delete_post' post.id %}"
+                class="d-inline">
+            {% csrf_token %}
+            <button class="btn btn-sm btn-outline-danger"
+                    onclick="return confirm('Видалити пост?')">
+              <i class="bi bi-trash"></i>
+            </button>
+          </form>
         {% endif %}
+
         {% if not post.shared_from %}
-          <button type="button" class="repost-btn btn btn-sm btn-outline-info" data-post="{{ post.id }}"><i class="bi bi-share"></i></button>
+          <form method="post"
+                action="{% url 'posts:repost_post' original.id %}"
+                class="d-inline">
+            {% csrf_token %}
+            <button class="btn btn-sm btn-outline-info">
+              <i class="bi bi-share"></i>
+            </button>
+          </form>
         {% endif %}
+
       </div>
+
     </div>
+
   </div>
 </div>
 {% endwith %}

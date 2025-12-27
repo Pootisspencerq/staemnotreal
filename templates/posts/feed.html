@@ -6,50 +6,99 @@
 
 {% block content %}
 <div class="container py-4">
-  <h2 class="mb-4 text-light"><i class="bi bi-newspaper"></i> Стрічка новин</h2>
 
-  <!-- Створення поста -->
-      {% include "posts/_post_form.html" %}
+  <!-- HEADER -->
+  <h2 class="mb-4 text-light d-flex align-items-center gap-2">
+    <i class="bi bi-newspaper"></i>
+    Стрічка новин
+  </h2>
 
+  <!-- CREATE POST -->
+  <div class="mb-4">
+    {% include "posts/_post_form.html" %}
+  </div>
 
+  <!-- POSTS -->
   <div id="posts-container">
     {% for post in page_obj %}
-        {% include "posts/post_card.html" with post=post %}
+      {% include "posts/post_card.html" with post=post %}
     {% empty %}
-        <p class="text-muted">Поки що немає постів.</p>
+      <div class="text-center text-muted py-5">
+        <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+        Поки що немає постів
+      </div>
     {% endfor %}
   </div>
 
-  <div id="loader" class="text-center my-3" style="display:none;">
-      <div class="spinner-border text-light" role="status">
-          <span class="sr-only">Loading...</span>
-      </div>
+  <!-- LOADER (infinite scroll ready) -->
+  <div id="loader" class="text-center my-4 d-none">
+    <div class="spinner-border text-light" role="status"></div>
   </div>
+
 </div>
 
-<!-- Infinite scroll JS (same as before) -->
+<!-- ===================== -->
+<!-- AJAX: LIKES & VOTES  -->
+<!-- ===================== -->
 <script>
-let page = 2;
-let loading = false;
-let hasNext = {{ page_obj.has_next|yesno:"true,false" }};
+function getCSRFToken() {
+  return document.querySelector('[name=csrfmiddlewaretoken]').value;
+}
 
-window.addEventListener("scroll", async () => {
-  if (!hasNext || loading) return;
-  if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 300) {
-    loading = true;
-    document.getElementById("loader").style.display = "block";
+// LIKE BUTTON
+document.addEventListener("click", function (e) {
+  const btn = e.target.closest(".like-btn");
+  if (!btn) return;
 
-    const res = await fetch(`?page=${page}`, {
-      headers: { "X-Requested-With": "XMLHttpRequest" }
-    });
-    const data = await res.json();
+  e.preventDefault();
 
-    document.getElementById("posts-container").insertAdjacentHTML("beforeend", data.html);
-    hasNext = data.has_next;
-    page++;
-    loading = false;
-    document.getElementById("loader").style.display = "none";
-  }
+  const postId = btn.dataset.post;
+
+  fetch(`/posts/${postId}/like/`, {
+    method: "POST",
+    headers: {
+      "X-CSRFToken": getCSRFToken(),
+      "X-Requested-With": "XMLHttpRequest",
+    },
+  })
+  .then(response => response.json())
+  .then(data => {
+    const count = document.getElementById(`like-count-${postId}`);
+    const icon = document.getElementById(`like-icon-${postId}`);
+
+    count.innerText = data.likes;
+
+    if (data.liked) {
+      icon.classList.remove("bi-heart");
+      icon.classList.add("bi-heart-fill", "text-danger");
+    } else {
+      icon.classList.remove("bi-heart-fill", "text-danger");
+      icon.classList.add("bi-heart");
+    }
+  });
+});
+
+// VOTE BUTTON
+document.addEventListener("click", function (e) {
+  const btn = e.target.closest(".vote-btn");
+  if (!btn) return;
+
+  e.preventDefault();
+
+  const postId = btn.dataset.post;
+  const action = btn.dataset.action;
+
+  fetch(`/posts/${postId}/vote/${action}/`, {
+    method: "POST",
+    headers: {
+      "X-CSRFToken": getCSRFToken(),
+      "X-Requested-With": "XMLHttpRequest",
+    },
+  })
+  .then(response => response.json())
+  .then(data => {
+    document.getElementById(`vote-count-${postId}`).innerText = data.score;
+  });
 });
 </script>
 

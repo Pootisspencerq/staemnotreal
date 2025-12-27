@@ -1,60 +1,54 @@
-<form action="{% url 'posts:create_post' %}" id="create-post-form" method="post" enctype="multipart/form-data"
+{% load static %}
+
+<form action="{% url 'posts:create_post' %}"
+      method="post"
+      enctype="multipart/form-data"
       class="mb-4 p-3 border rounded bg-dark shadow-sm">
+
   {% csrf_token %}
 
   <!-- TEXT -->
   <div class="mb-3">
-    <textarea 
-      name="text" 
-      class="form-control mb-2 text-light bg-dark border-secondary" 
-      rows="3" 
+    <textarea
+      name="text"
+      class="form-control text-light bg-dark border-secondary"
+      rows="3"
       placeholder="Що у вас нового?"></textarea>
   </div>
 
   <!-- FILE -->
-  <div class="mb-3 custom-file-wrapper">
-      <label class="custom-file-label" for="file-input">📁 Вибрати файл</label>
-      <span id="file-name" class="file-name-text text-muted">Файл не вибрано</span>
+  <div class="mb-3 d-flex align-items-center gap-2">
+    <label for="file-input" class="btn btn-outline-secondary btn-sm mb-0">
+      📁 Вибрати файл
+    </label>
 
-      <input type="file" id="file-input" name="file" accept="*/*"
-             style="display:none;">
+    <span id="file-name" class="text-muted">
+      Файл не вибрано
+    </span>
+
+    <input type="file"
+           id="file-input"
+           name="file"
+           hidden>
   </div>
 
-  <!-- LINK -->
-  <div class="mb-3">
-    <input 
-      type="url" 
-      name="link" 
-      class="form-control mb-2 text-light bg-dark border-secondary" 
-      placeholder="Посилання (необов'язково)">
-  </div>
 
-  <div class="d-flex justify-content-end mt-2">
-    <button type="submit" class="btn btn-primary btn-sm">Опублікувати</button>
+
+  <!-- SUBMIT -->
+  <div class="text-end">
+    <button type="submit" class="btn btn-primary btn-sm">
+      Опублікувати
+    </button>
   </div>
 </form>
 
-
 <script>
-document.addEventListener('DOMContentLoaded', () => {
+const fileInput = document.getElementById('file-input')
+const fileName = document.getElementById('file-name')
 
-  /* ===================== DOM ELEMENTS ====================== */
-  const form = document.getElementById('create-post-form');
-  const fileInput = document.getElementById('file-input');
-  const fileName = document.getElementById('file-name');
-  const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-  const postsContainer = document.getElementById('posts-container'); // FIXED TARGET
-
-  /* ===================== FILE NAME DISPLAY ================== */
-  fileInput.addEventListener('change', () => {
-    fileName.textContent =
-      fileInput.files.length
-        ? fileInput.files[0].name
-        : "Файл не вибрано";
-  });
-
-
-  
-
-});
+fileInput.addEventListener('change', () => {
+  fileName.textContent = fileInput.files.length
+    ? fileInput.files[0].name
+    : 'Файл не вибрано'
+})
 </script>
